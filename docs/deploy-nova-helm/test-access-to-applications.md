@@ -70,7 +70,7 @@ From our network utility container, *inside* the kubernetes cluster
 
   ```bash
   # Using curl 
-  curl -s http://$NOVA_LB | grep title
+  curl http://$NOVA_LB
 
   # Using a web browser - get the DNS or IP address and enter into your web browser
   echo $NOVA_LB
