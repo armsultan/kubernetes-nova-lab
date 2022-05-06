@@ -1,4 +1,4 @@
-# Deploy Nova for Kubernetes
+# Deploy Nova for Kubernetes using Helm
 
 ## Introduction
 
@@ -157,7 +157,7 @@ nodes deployed
 
 ### Troubleshooting Errors
 
-**Errors?** If you have errors with the deployment, see [Troubleshooting](#troubleshooting)
+**Errors?** If you have errors with the deployment, see [Troubleshooting Nova Deployment](#troubleshooting)
 
 Congratulations, you have deployed the Nova worker node. Its now ready to
 have an ADC policy attached to it and start takeing on workloads. We will to that next.

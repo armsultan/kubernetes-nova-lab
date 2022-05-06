@@ -13,8 +13,15 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
 
 1. Deploy Sample Application
    1. [Deploy our Sample Applications](docs/deploy-sample-application/deploy-sample-application.md)
-   1. An Important sidebar: [Service Discovery on "Normal" vs "Headless" services](docs/deploy-nova-helm/service-discovery-normal-vs-headless-services.md
-   1. (docs/deploy-nova-helm/configure-nova-backends.md)
+
+1. Deploy Nova for Kubernetes
+   1. [Deploy Nova for Kubernetes using Helm](docs/deploy-nova-helm/deploy-nova-helm.md)
+   2. An Important sidebar: [Service Discovery on "Normal" vs "Headless" services](docs/deploy-nova-helm/service-discovery-normal-vs-headless-services.md)
+   1. [Configure simple HTTP load Balancing in Nova](docs/deploy-nova-helm/configure-simple-http-load-balancing-in-nova.md)
+
+## Troubleshooting Nova 
+   1. WIP, see [troubleshooting](docs/deploy-nova-helm/troubleshooting-nova-deployment.md)
+
 ## Clean up after lab completion
 
 1. Clean up - Delete out Kubernetes cluster in the cloud (Amazon Web Services (AWS))

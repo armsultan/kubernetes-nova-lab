@@ -1,5 +1,5 @@
 
-# Configure backends configruation in Nova 
+# Configure a simple HTTP load Balancing service in Nova 
 
 In the [last excerise](service-discovery-normal-vs-headless-services.md) we
 discovered the importance of using "headless" services in order for Nova to
