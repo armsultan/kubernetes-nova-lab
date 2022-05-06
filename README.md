@@ -24,5 +24,5 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
 
 ## Clean up after lab completion
 
-1. Clean up - Delete out Kubernetes cluster in the cloud (Amazon Web Services (AWS))
+1. Clean up - Delete your Kubernetes cluster in the cloud (AWS) when you are done testing
    1. [Delete our AWS EKS Kubernetes cluster](docs/aws/delete-eks-cluster.md)
