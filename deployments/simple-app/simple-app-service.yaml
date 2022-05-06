@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sun-svc
+  namespace: solar-system
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: sun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: moon-svc
+  namespace: solar-system
+  labels:
+        app: moon 
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: moon

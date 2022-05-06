@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sun
+  namespace: solar-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sun
+  template:
+    metadata:
+      labels:
+        app: sun
+    spec:
+      containers:
+      - name: sun
+        image: armsultan/test-page:plain-text-nonroot
+        # resources:
+        #   limits:
+        #     cpu: "1"
+        #     memory: "200Mi"
+        #   requests:
+        #     cpu: "0.5"
+        #     memory: "100Mi"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moon
+  namespace: solar-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moon 
+  template:
+    metadata:
+      labels:
+        app: moon 
+    spec:
+      containers:
+      - name: moon 
+        image: armsultan/test-page:plain-text-nonroot
+        # resources:
+        #   limits:
+        #     cpu: "1"
+        #     memory: "200Mi"
+        #   requests:
+        #     cpu: "0.5"
+        #     memory: "100Mi"
+        ports:
+        - containerPort: 8080
