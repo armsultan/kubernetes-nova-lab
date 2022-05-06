@@ -1,5 +1,76 @@
 WIP:
 
+
+kubectl exec -i -t network-tools -- dig ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
+kubectl exec -i -t network-tools -- curl ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
+
+## Test access to our application from *inside* the kubernetes cluster
+
+From our network utility container, *inside* the kubernetes cluster
+
+1.  Make a internal request using `curl` to the `sun-svc` service:
+    ```bash
+    kubectl exec -i -t network-tools -- curl  _http._tcp.sun-svc.solar-system.svc.cluster.local:8080
+    ```
+
+1. Make a internal request using `curl` to the `moon-svc` service:
+    ```bash
+    kubectl exec -i -t network-tools -- curl  _http._tcp.moon-svc.solar-system.svc.cluster.local:8080
+    ```
+
+1. Make a internal request using `curl` to the nova worker node (pod) directly using the `clusterIP`:
+    ```bash
+    # using the default / path
+    kubectl exec -i -t network-tools -- curl 10.100.138.162 -I
+
+    HTTP/1.1 200 OK
+    Date: Fri, 06 May 2022 16:45:50 GMT
+    Content-Type: text/plain
+    Content-Length: 210
+    Expires: Fri, 06 May 2022 16:45:49 GMT
+    Cache-Control: no-cache
+    Server: NOVA    # <---This confirms we have been proxied by the Nova ADC worker node
+    Set-Cookie: NOVAID-3da547439a9e6285686202e9c8f610b1=dba2f13a1909f004; path=/; HttpOnly
+    ```
+
+1. Make a series of internal requests using `curl` to the nova worker node (pod)
+   directly using the `clusterIP`, via Nova, we will be equally load balanced in
+   a round robin manner:
+    ```bash
+    kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://10.100.138.162 | grep 'Server address'; done"
+
+    # You can see we have been load balanced in "Round Robin":
+    Server address: 192.168.26.52:8080
+    Server address: 192.168.70.95:8080
+    Server address: 192.168.26.52:8080
+    Server address: 192.168.70.95:8080
+    Server address: 192.168.26.52:8080
+    Server address: 192.168.70.95:8080
+    Server address: 192.168.26.52:8080
+    Server address: 192.168.70.95:8080
+    Server address: 192.168.26.52:8080
+    Server address: 192.168.70.95:8080
+    ```
+
+## Test access to our application from *outside* the kubernetes cluster
+
+1. Find the LoadBalancer address
+
+kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+
+1. Get the loadBalancer Address for Nova (`nova-srv`) service, then run a `curl`
+   command to test access from *outside* the kubernetes cluster
+
+# Get External loadBalancer address
+NOVA_LB=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+
+# Optional: Get a IPv4 Address
+NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
+
+# Nova Service
+curl -s http://$NOVA_LB | grep title
+
+
 ## Troubleshooting
 
 If the Pod is stuck in a `pending`  state, we can troubleshoot with the following:

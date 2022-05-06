@@ -131,14 +131,14 @@ nodes deployed
   ```bash
   $ kubectl get pods,deployments,services -n nova-ns
 
-  NAME                            READY   STATUS    RESTARTS   AGE
-  pod/nova-dpl-6bc44869ff-zkmsb   1/1     Running   0          42s
+  NAME                           READY   STATUS    RESTARTS   AGE
+  pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          16h
 
   NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-  deployment.apps/nova-dpl   1/1     1            1           42s
+  deployment.apps/nova-dpl   1/1     1            1           16h
 
-  NAME               TYPE           CLUSTER-IP     EXTERNAL-IP                                                              PORT(S)                                     AGE
-  service/nova-svc   LoadBalancer   10.100.73.58   ab966acbf6845494caab3ca1ef0b5210-598635283.us-west-2.elb.amazonaws.com   443:30727/TCP,80:31689/TCP,1080:30011/TCP   42s
+  NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
+  service/nova-svc   LoadBalancer   10.100.138.162   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com   443:32297/TCP,80:32643/TCP,1080:31318/TCP   16h
   ```
   We can confirm the Nova worker node is deployed successfully inside kubernetes
   because all three are reported:

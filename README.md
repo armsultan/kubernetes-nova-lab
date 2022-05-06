@@ -19,6 +19,10 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
    2. An Important sidebar: [Service Discovery on "Normal" vs "Headless" services](docs/deploy-nova-helm/service-discovery-normal-vs-headless-services.md)
    1. [Configure simple HTTP load Balancing in Nova](docs/deploy-nova-helm/configure-simple-http-load-balancing-in-nova.md)
 
+1. Client-side testing, accessing applications exposed by Nova for Kubernetes
+   1. [Test access to our applications](docs/deploy-nova-helm/test-access-to-applications.md)
+
+
 ## Troubleshooting Nova 
    1. WIP, see [troubleshooting](docs/deploy-nova-helm/troubleshooting-nova-deployment.md)
 

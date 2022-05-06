@@ -1,5 +1,5 @@
 
-# Configure a simple HTTP load Balancing service in Nova 
+# Configure simple HTTP load Balancing in Nova
 
 In the [last excerise](service-discovery-normal-vs-headless-services.md) we
 discovered the importance of using "headless" services in order for Nova to
@@ -83,9 +83,13 @@ backends, our **sun** and **moon** applications, to the internet
 
 1. Complete the **Listen & Backends** configurations of the a new ADC with the following details:
   * **Listen Bindings**:  `0.0.0.0:80` (default)
-  * **Backends**: 
+  * **Backends** (order is important, drag backend to re-order if nessacary): 
     * Checked - **NAME:** `k8s-sun-solar-system`, **WHEN:** `Exact Path`: `sun` 
-    * Checked - **NAME:** `k8s-moon-solar-system`, **WHEN:** `Exact Path`: `moon` 
+    * Checked - **NAME:** `k8s-moon-solar-system`, **WHEN:** `Default` 
+
+  This configuration will route all requests to the **moon** application unless
+  a request with the exact path `/sun` is made, in which traffic to this url
+  path will get routed to the **sun** application 
 
   ![nova new node](media/image11.png)
 
@@ -122,6 +126,7 @@ backends, our **sun** and **moon** applications, to the internet
   ![nova new node](media/image12.png)
 
 Great, we have completed a simple HTTP Load Balancing configuration and should
-be able to access our applications from the internet!
+be able to access our applications from inside the kubernetes cluster and from
+the internet!
 
 Go back to [Table of Contents](../../README.md)

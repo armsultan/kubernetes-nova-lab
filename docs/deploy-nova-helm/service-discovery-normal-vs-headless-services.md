@@ -55,21 +55,20 @@ pods in a "Headless" Services.
 ### Use a simple network utility Pod to test our DNS
 
 1. Use
-   [**dnsutils**](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/),
+   [**network-tools**]https://github.com/armsultan/docker-network-tools),
    a utility Docker network troubleshooting container to run a DNS lookup. First
    deploy the network utility pod
 
    ```bash
    # Use this manifest to create the network utility Pod:
-   kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
-
-   pod/dnsutils created
+   kubectl apply -f deployments/tools/network-tools.yaml
+   pod/network-tools created
 
    # verify it's status
-   kubectl get pods dnsutils
+   kubectl get pods network-tools
 
-   NAME       READY   STATUS    RESTARTS   AGE
-   dnsutils   1/1     Running   0          37s
+   NAME           READY    STATUS    RESTARTS   AGE
+   network-tools   1/1     Running   0          37s
    ```
 
 ### Run DNS checks on "Normal" Service
@@ -80,13 +79,13 @@ deployed our sun and moon applications with a "normal" service. We used [this
 manifest file](../../deployments/simple-app/simple-app-service.yaml) which
 **does not** explicitly se `clusterIP: None`
 
-1.  Now that the `dnsutils` pod is running, you can use `kubectl exec` to do a `nslookup` or
+1.  Now that the `network-tools` pod is running, you can use `kubectl exec` to do a `nslookup` or
     `dig` or in that environment. If you see something like the following when
     querying for the **sun** service, DNS is working correctly.
 
    ```bash
    # Find out Sun Application
-   kubectl exec -i -t dnsutils -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
+   kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
 
    Server:         10.100.0.10
    Address:        10.100.0.10#53
@@ -103,7 +102,7 @@ manifest file](../../deployments/simple-app/simple-app-service.yaml) which
 
    ```bash
    # Find out Moon Application
-   kubectl exec -i -t dnsutils -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
+   kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
 
   Server:         10.100.0.10
   Address:        10.100.0.10#53
@@ -190,7 +189,7 @@ so we know to expect exactly two SRV records, one for each pod in the service
 
    ```bash
    # Find out Sun Application
-   kubectl exec -i -t dnsutils -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
+   kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
 
    Server:         10.100.0.10
    Address:        10.100.0.10#53
@@ -213,7 +212,7 @@ so we know to expect exactly two SRV records, one for each pod in the service
 
    ```bash
    # Find out Moon Application
-   kubectl exec -i -t dnsutils -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
+   kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
 
    Server:         10.100.0.10
    Address:        10.100.0.10#53
@@ -229,6 +228,44 @@ so we know to expect exactly two SRV records, one for each pod in the service
     with the address `192.168.70.95` and `192.168.26.52`, as it is a "headless"
     service
    * Again, we see `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
+
+### See load balancing via service in action
+
+1. Make some `curl` request to ther service discovery address from the network
+   utility container and witness request "load balance" between all pods *randomly*
+
+   ```bash
+   # Sun
+   kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.sun-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.32.100:8080
+   Server address: 192.168.32.100:8080
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.32.100:8080
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.72.194:8080
+   Server address: 192.168.32.100:8080
+   ```
+
+   ```bash
+   # Moon
+   kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+
+   Server address: 192.168.70.95:8080
+   Server address: 192.168.26.52:8080
+   Server address: 192.168.26.52:8080
+   Server address: 192.168.70.95:8080
+   Server address: 192.168.70.95:8080
+   Server address: 192.168.26.52:8080
+   Server address: 192.168.70.95:8080
+   Server address: 192.168.26.52:8080
+   Server address: 192.168.26.52:8080
+   Server address: 192.168.26.52:8080
+   ```
+
 
 ### Optional: Use kubectl to find kube-dns address
 

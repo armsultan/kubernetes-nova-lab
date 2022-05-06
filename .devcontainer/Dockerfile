@@ -9,12 +9,12 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
-    jq \
-    bat \
-    tree \
+        jq \
+        tree \
+        dnsutils \
+        bat \
     # Setup a bat -> batcat symlink or alias 
-    && mkdir -p ~/.local/bin \
-    && ln -s /usr/bin/batcat ~/.local/bin/bat \
+    && ln -s $(which batcat) /bin/bat \
     # Install eksctl
     && curl --silent \
             --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
@@ -23,5 +23,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     # Install known working version for kubectl
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl \
     && chmod +x ./kubectl \
-    && mv ./kubectl /usr/local/bin/kubectl
+    && mv ./kubectl /usr/local/bin/kubectl \
+    # Set some aliases here
+    && echo 'alias k="kubectl"' >> ~/.bashrc \
+    && source ~/.bashrc
     

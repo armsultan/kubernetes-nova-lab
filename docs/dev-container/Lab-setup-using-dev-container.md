@@ -66,4 +66,16 @@ container in VS Code
 
   ![vs code](media/image5.png)
 
+## Troubleshooting
+
+If you need to force a rebuild of the dev container, run the following commands
+
+```bash
+# in host terminal
+cd .devcontainer
+docker build --no-cache .          # build the image without using the local cached layers
+docker build --no-cache --pull .   # also pull new base image (FROM)
+# after build the image, reopen remote container in the vscode
+```
+
 We are now ready to run the lab! - Go back to [Table of Contents](../../README.md)
