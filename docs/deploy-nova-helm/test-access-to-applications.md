@@ -58,22 +58,22 @@ From our network utility container, *inside* the kubernetes cluster
 1. Find the the external DNS name or Public IP address associated to the
    `loadBalancer` for the Nova (`nova-srv`) service.
 
-   ```bash
-   # Get External loadBalancer address
-   NOVA_LB=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}') 
-   # Optional: Get the IPv4 Address
-   # NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
+  ```bash
+  # Get External loadBalancer address
+  NOVA_LB=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}') 
+  # Optional: Get the IPv4 Address
+  # NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
   ```
-  
+
 1. Now run a `curl` command to test access from *outside* the kubernetes
    cluster, in a terminal or web browser on you your client machine 
 
-   ```bash
-   # Using curl 
-   curl -s http://$NOVA_LB | grep title
+  ```bash
+  # Using curl 
+  curl -s http://$NOVA_LB | grep title
 
-   # Using a web browser - get the DNS or IP address and enter into your web browser
-   echo $NOVA_LB
+  # Using a web browser - get the DNS or IP address and enter into your web browser
+  echo $NOVA_LB
 
-   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
-   ```
+  ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
+  ```
