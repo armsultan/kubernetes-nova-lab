@@ -8,7 +8,7 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
 1. Setup our client "jump host" using VS code Development Containers
    1. [Get started with development Containers in Visual Studio Code](docs/dev-container/lab-setup-using-dev-container.md)
 
-1. Deploy a Kubernetes cluster in the cloud (Amazon Web Services (AWS))
+1. Deploy a Kubernetes cluster in the cloud - Amazon Web Services (AWS)
    1. [Create our a AWS EKS Kubernetes cluster](docs/aws/aws-cli-eks-setup-guide.md)
 
 1. Deploy Sample Application
