@@ -129,4 +129,6 @@ Great, we have completed a simple HTTP Load Balancing configuration and should
 be able to access our applications from inside the kubernetes cluster and from
 the internet!
 
+---
+
 Go back to [Table of Contents](../../README.md)

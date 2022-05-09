@@ -3,9 +3,11 @@
 We can run some quick tests from a pod *inside* the kubernetes cluster and from a
 external client over the internet
 
-## Test access to our application from *inside* the kubernetes cluster
+## Test connectivity to our application from *inside* the kubernetes cluster
 
 From our network utility container, *inside* the kubernetes cluster
+
+![Test connectivity to our application from *inside* the kubernetes cluster](media/image20.png)
 
 1.  Make a internal request using `curl` to the `sun-svc` service:
     

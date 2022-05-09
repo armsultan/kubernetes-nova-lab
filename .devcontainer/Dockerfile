@@ -13,6 +13,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         tree \
         dnsutils \
         bat \
+        fzf \
+        kubecolor \
     # Setup a bat -> batcat symlink or alias 
     && ln -s $(which batcat) /bin/bat \
     # Install eksctl
@@ -24,7 +26,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl \
     && chmod +x ./kubectl \
     && mv ./kubectl /usr/local/bin/kubectl \
-    # Set some aliases here
-    && echo 'alias k="kubectl"' >> ~/.bashrc \
-    && source ~/.bashrc
-    
+    # Load aliases 
+    && echo ". /workspaces/dev-container/.bash_aliases" >> /etc/bash.bashrc \
+    # Load fzf shortcuts for bash 
+    && echo ". /usr/share/doc/fzf/examples/key-bindings.bash" >> /etc/bash.bashrc \
+    && echo ". /usr/share/doc/fzf/examples/completion.bash" >> /etc/bash.bashrc

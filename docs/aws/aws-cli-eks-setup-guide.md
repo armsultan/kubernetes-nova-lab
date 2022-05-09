@@ -193,4 +193,6 @@ account
 
    ```
 
+---
+
 We have successfully deployed our kubernetes cluster - Go back to [Table of Contents](../../README.md)

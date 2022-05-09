@@ -1,5 +1,25 @@
 WIP:
 
+Is scaling nova-dpl or multiple nova workers supported? (default is one)
+
+What about deploying in a daemonset?
+
+```bash
+kubectl scale deployments/nova-dpl  --replicas=3 -n nova-ns
+watch kubectl get pods,deployments,services -n nova-ns 
+
+
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          21h
+pod/nova-dpl-99fcc6c69-7xqbs   1/1     Running   0          2m16s
+pod/nova-dpl-99fcc6c69-8v689   1/1     Running   0          2m16s
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nova-dpl   3/3     3            3           21h
+
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
+service/nova-svc   LoadBalancer   10.100.138.162   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com   443:32297/TCP,80:32643/TCP,1080:31318/TCP   21h
+```
 
 kubectl exec -i -t network-tools -- dig ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
 kubectl exec -i -t network-tools -- curl ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com

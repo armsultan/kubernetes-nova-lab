@@ -50,110 +50,110 @@ nodes deployed
 
 ## Install and Configure Nova for Kubernetes
 
-## Setup a new Nova node on the Nova Controller
+### Setup a new Nova node on the Nova Controller
 
 1. Log into your [Nova Dashboard](https://nova.snapt.net/)
 1. Create a new node: **Nodes > New Node** > [Create new node] e.g. "`k8s-nova`"
 
-  ![nova new node](media/image1.png)
+    ![nova new node](media/image1.png)
 
 1. Download helm chart and save the `nova.yml` file into the root directory of your
    project folder - We will need that soon
 
-  ![nova new node](media/image2.png)
+    ![nova new node](media/image2.png)
 
 1. Inspect the `nova.yaml` file. You will see the your `node_id` and `node_key` are used
    to identify a Node. This is unique to your Nova account. **Keep these private!**
 
-  ```bash
-  bat nova.yaml
+    ```bash
+    bat nova.yaml
 
-   11   │   # The name of the service account to use.
-   12   │   # If not set and create is true, a name is generated using the fullname template
-   13   │ 
-   14   │ node_id: XXxxXXX-XXXX-XXXx-xXXX-XXXXXXXx
-   15   │ node_key: N-XXXXXXXXXX-XXXXXXXXXXXXXx...
-  ```
+    11   │   # The name of the service account to use.
+    12   │   # If not set and create is true, a name is generated using the fullname template
+    13   │ 
+    14   │ node_id: XXxxXXX-XXXX-XXXx-xXXX-XXXXXXXx
+    15   │ node_key: N-XXXXXXXXXX-XXXXXXXXXXXXXx...
+    ```
 
 ### Install Nova for Kubernetes using Helm 
 
 1. Add and update the Snapt helm repo as outlined in the [Nova helm
    installation Instructions](https://nova.snapt.net/docs/1.0/install_helm) 
 
-  ```bash
-  $ helm repo add nova-helm https://snapt.github.io/nova-helm
+    ```bash
+    $ helm repo add nova-helm https://snapt.github.io/nova-helm
 
-  "nova-helm" has been added to your repositories
-  ```
-  ```bash
-  $ helm repo update
+    "nova-helm" has been added to your repositories
+    ```
+    ```bash
+    $ helm repo update
 
-  ...Successfully got an update from the "nova-helm" chart repository
-  Update Complete. ⎈Happy Helming!⎈
-  ```
+    ...Successfully got an update from the "nova-helm" chart repository
+    Update Complete. ⎈Happy Helming!⎈
+    ```
 1. Now deploy Nova for Kubernetes with our helm values manifest:
 
-  ```bash
-  #. Replace <release_name> with your own name, e.g. nova
-  # $ helm install <release_name> -f nova.yaml nova-helm/nova
-  $ helm install nova -f nova.yml nova-helm/nova
+    ```bash
+    #. Replace <release_name> with your own name, e.g. nova
+    # $ helm install <release_name> -f nova.yaml nova-helm/nova
+    $ helm install nova -f nova.yml nova-helm/nova
 
-  NAME: nova
-  LAST DEPLOYED: Thu May  5 22:37:48 2022
-  NAMESPACE: default
-  STATUS: deployed
-  REVISION: 1
-  TEST SUITE: None
-  ```
+    NAME: nova
+    LAST DEPLOYED: Thu May  5 22:37:48 2022
+    NAMESPACE: default
+    STATUS: deployed
+    REVISION: 1
+    TEST SUITE: None
+    ```
 
   You may have seen this screen if you had the Node page up in the Nova
   controller during time of `helm install`:
 
-  ![nova new node](media/image18.png)
+    ![nova new node](media/image18.png)
 
 1. Inspect the helm deployment. The namespace `nova-ns` is created and is where
    the `nova` is deployed
 
-  ```bash
-  $ kubectl get namespaces
+    ```bash
+    $ kubectl get namespaces
 
-  NAME              STATUS   AGE
-  default           Active   4d23h
-  kube-node-lease   Active   4d23h
-  kube-public       Active   4d23h
-  kube-system       Active   4d23h
-  nova-ns           Active   53s    # <-- There it is!
-  solar-system      Active   4d23h
-  ```
+    NAME              STATUS   AGE
+    default           Active   4d23h
+    kube-node-lease   Active   4d23h
+    kube-public       Active   4d23h
+    kube-system       Active   4d23h
+    nova-ns           Active   53s    # <-- There it is!
+    solar-system      Active   4d23h
+    ```
 
 1. Inspect the `nova-ns` namespace
+              
+    ```bash
+    $ kubectl get pods,deployments,services -n nova-ns
 
-  ```bash
-  $ kubectl get pods,deployments,services -n nova-ns
+    NAME                           READY   STATUS    RESTARTS   AGE
+    pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          16h
 
-  NAME                           READY   STATUS    RESTARTS   AGE
-  pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          16h
+    NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+    deployment.apps/nova-dpl   1/1     1            1           16h
 
-  NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-  deployment.apps/nova-dpl   1/1     1            1           16h
+    NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
+    service/nova-svc   LoadBalancer   10.100.138.162   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com   443:32297/TCP,80:32643/TCP,1080:31318/TCP   16h
+    ```
+    We can confirm the Nova worker node is deployed successfully inside kubernetes
+    because all three are reported:
+    * `pod` is `STATUS Running`
+    * `deployment` is `READY 1/1` (100% Ready)
+    * the service type `LoadBalancer` has an assigned `EXTERNAL-IP` (a very long AWS elb address)
 
-  NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
-  service/nova-svc   LoadBalancer   10.100.138.162   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com   443:32297/TCP,80:32643/TCP,1080:31318/TCP   16h
-  ```
-  We can confirm the Nova worker node is deployed successfully inside kubernetes
-  because all three are reported:
-   * `pod` is `STATUS Running`
-   * `deployment` is `READY 1/1` (100% Ready)
-   * the service type `LoadBalancer` has an assigned `EXTERNAL-IP` (a very long AWS elb address)
-
-  However, we must also confirm the Nova worker Node is registered and connected
-  to the Nova Controller. See next step
+    However, we must also confirm the Nova worker Node is registered and connected
+    to the Nova Controller. See next step
 
 1. Find your Nova worker Node under **NODES > Nodes** and view its **Node Status**
 
-  ![nova new node](media/image16.png)
+    ![nova new node](media/image16.png)
 
-  ![nova new node](media/image17.png)
+    ![nova new node](media/image17.png)
 
 ### Troubleshooting Errors
 
@@ -161,5 +161,7 @@ nodes deployed
 
 Congratulations, you have deployed the Nova worker node. Its now ready to
 have an ADC policy attached to it and start takeing on workloads. We will to that next.
+
+---
 
 Go back to [Table of Contents](../../README.md)
