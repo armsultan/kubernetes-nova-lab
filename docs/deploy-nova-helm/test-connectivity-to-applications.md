@@ -23,18 +23,19 @@ From our network utility container, *inside* the kubernetes cluster
 
 1. Make a internal request using `curl` to the nova worker node (pod) directly using the `clusterIP`:
 
-  ```bash
-  # using the default / path
-  kubectl exec -i -t network-tools -- curl 10.100.138.162 -I
-  HTTP/1.1 200 OK
-  Date: Fri, 06 May 2022 16:45:50 GMT
-  Content-Type: text/plain
-  Content-Length: 210
-  Expires: Fri, 06 May 2022 16:45:49 GMT
-  Cache-Control: no-cache
-  Server: NOVA    # <---This confirms we have been proxied by the Nova ADC worker node
-  Set-Cookie: NOVAID-3da547439a9e6285686202e9c8f610b1=dba2f13a1909f004; path=/; HttpOnly
-  ```
+    ```bash
+    # using the default / path
+    kubectl exec -i -t network-tools -- curl 10.100.138.162 -I
+
+    HTTP/1.1 200 OK
+    Date: Fri, 06 May 2022 16:45:50 GMT
+    Content-Type: text/plain
+    Content-Length: 210
+    Expires: Fri, 06 May 2022 16:45:49 GMT
+    Cache-Control: no-cache
+    Server: NOVA    # <---This confirms we have been proxied by the Nova ADC worker node
+    Set-Cookie: NOVAID-3da547439a9e6285686202e9c8f610b1=dba2f13a1909f004; path=/; HttpOnly
+    ```
 
 1. Make a series of internal requests using `curl` to the nova worker node (pod)
    directly using the `clusterIP`, via Nova, we will be equally load balanced in
@@ -60,7 +61,7 @@ From our network utility container, *inside* the kubernetes cluster
 From our a external client machine, *outside* the kubernetes cluster
 
 
-![Test connectivity to our application from *outside* the kubernetes cluster](media/image21.png)
+![Test connectivity to our application from *outside* the kubernetes cluster](media/image23.png)
 
 
 1. Find the the external DNS name or Public IP address associated to the
