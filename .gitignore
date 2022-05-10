@@ -1,6 +1,6 @@
 # Dont save nova helm
 nova.yaml
 nova.yml
-
+nova-test.yaml
 # Dont save .aws credentials or config
 .aws/*

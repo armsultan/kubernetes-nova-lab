@@ -157,7 +157,7 @@ We have a preconfigured manifests for the following setup:
     service/sun-svc    ClusterIP   10.100.130.214   <none>        80/TCP    4m44s   app=sun
     ```
 
-Congratulations, you have deployed the sample applicationm but we still cannot
+Congratulations, you have deployed the sample application but we still cannot
 access our applications from outside the kubernetes cluster yet. We will figure
 that out next.
 

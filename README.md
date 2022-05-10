@@ -20,7 +20,7 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
    1. [Configure simple HTTP load Balancing in Nova](docs/deploy-nova-helm/configure-simple-http-load-balancing-in-nova.md)
 
 1. Client-side testing, connectivity applications exposed by Nova for Kubernetes
-   1. [Test access to our applications](docs/deploy-nova-helm/test-connectivity-to-applications.md)
+   1. [Test connectivity to our applications](docs/deploy-nova-helm/test-connectivity-to-applications.md)
 
 
 ## Troubleshooting Nova 

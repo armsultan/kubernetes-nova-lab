@@ -84,12 +84,12 @@ backends, our **sun** and **moon** applications, to the internet
 1. Complete the **Listen & Backends** configurations of the a new ADC with the following details:
   * **Listen Bindings**:  `0.0.0.0:80` (default)
   * **Backends** (order is important, drag backend to re-order if nessacary): 
-    * Checked - **NAME:** `k8s-sun-solar-system`, **WHEN:** `Exact Path`: `sun` 
+    * Checked - **NAME:** `k8s-sun-solar-system`, **WHEN:** `Exact Path`: `/sun`  (**Make sure to add a Forward slash, `/`, here**)
     * Checked - **NAME:** `k8s-moon-solar-system`, **WHEN:** `Default` 
 
   This configuration will route all requests to the **moon** application unless
   a request with the exact path `/sun` is made, in which traffic to this url
-  path will get routed to the **sun** application 
+  path will get routed to the **sun** application. **Make sure you have a forward slash (`/`) for `/sun`** 
 
   ![nova new node](media/image11.png)
 
@@ -131,4 +131,4 @@ the internet!
 
 ---
 
-Go back to [Table of Contents](../../README.md)
+Go back to [Table of Contents](../../README.md)h 

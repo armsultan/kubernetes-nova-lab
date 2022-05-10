@@ -2,14 +2,52 @@
 
 ## Introduction
 
-Nova for Kubernetes can be easily installed using a [Helm](https://helm.sh/ chart.
+Nova for Kubernetes can be easily installed using a [Helm](https://helm.sh/) chart.
 
 Upon install, three Kubernetes components are created. This is the *default* state:
 
  * A namespace following the following convention: `$release_name-nova-ns`
- * A deployment with a single replica using the `novaadc` client container
+ * A `deployment` with a single replica using the `novaadc` client container
+    * `resources` `requests` and `limits` are set (`cpu: 200m` and `memory: 1Gi`)
  * A `service` with type `LoadBalancer` to route traffic to the nova deployment
+    * `port` **80** and **443** and `targetPort`  **80** and **443**
 
+### A important note about resources requests and limits on the `deployment`:
+
+By default, the deployment defines resources requests and limits. While this is
+a kubernetes administration best pratice, if you are testing the Nova
+deployement, understandably, you could be deploying on low resourced kubernetes
+clusters (e.g. [Digital
+Ocean's](https://docs.digitalocean.com/products/kubernetes/) smallest and Basic
+cluster size).  In the case of `Insufficient memory` or  `Insufficient CPU`
+errors, your pods will be stuck in a If pods are `pending` state. 
+
+In an event of a resource error, refer to the section on
+[troubleshooting](troubleshooting-nova-deployment.md)
+
+See the snippet of the `resources` `requests` and `limits` defined on the Nova
+ADC Worker pod:
+
+  ```yaml
+  resources:
+    limits:
+      cpu: 300m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  ```
+
+### A important note about the `LoadBalancer`:
+
+The provided helm value file (`values.yaml`) already defines mapping of `port` (where the
+service is visible on the internet) **80** and **443** and then sends traffic to the
+`targetPort`  **80** and **443**. 
+  
+The helm value file (`values.yaml`) will need to be modified according. For
+example, if you only have a HTTP service, you may remove the `port443`
+definition under  `service_port_map` or add specific port mappings for other
+services not defined by default in the provided file.
 
 ### Prerequsites 
 
@@ -17,7 +55,7 @@ Before going any futher, please check you have satisfied the following prerequsi
 
  * `Helm` installed on client machine (this is included in development container)
  * You are a registed Nova user with a [Snapt Nova Account](https://www.snapt.net/platforms/nova-adc/register)**
- * You have running a Kubernetes platform supporting the `Service` type [`LoadBalancer`](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer)
+ * You have running a Kubernetes platform supporting the `Service` type [`LoadBalancer`](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) (Typically supported on all cloud managed kubernetes)
 
 
 ### Why Nova for Load Balancing in Kubernetes?
@@ -50,30 +88,72 @@ nodes deployed
 
 ## Install and Configure Nova for Kubernetes
 
-### Setup a new Nova node on the Nova Controller
+### Create a new Nova node on the Nova Controller
 
 1. Log into your [Nova Dashboard](https://nova.snapt.net/)
 1. Create a new node: **Nodes > New Node** > [Create new node] e.g. "`k8s-nova`"
 
     ![nova new node](media/image1.png)
 
-1. Download helm chart and save the `nova.yml` file into the root directory of your
-   project folder - We will need that soon
+1. You can download helm chart (`nova.yml`) from the "Additional Resources"
+   section on this Node page. **For this excerise, we will use one provided, [nova-http.yaml](../../deployments/nova/nova-http.yaml)**
 
     ![nova new node](media/image2.png)
 
-1. Inspect the `nova.yaml` file. You will see the your `node_id` and `node_key` are used
-   to identify a Node. This is unique to your Nova account. **Keep these private!**
+### Inspect and modify the helm value file
+
+1. Inspect the [nova-http](../../deployments/nova/nova-http) (*file provided*)
+   You will see a place holder for `node_id` and `node_key` which you will need
+   to replace. These IDs are used to identify a Node on your Nova Organization.
+   This is unique to your Nova account. **Keep these private!**
 
     ```bash
-    bat nova.yaml
+    bat deployments/nova/nova-http..yaml
 
-    11   │   # The name of the service account to use.
-    12   │   # If not set and create is true, a name is generated using the fullname template
-    13   │ 
-    14   │ node_id: XXxxXXX-XXXX-XXXx-xXXX-XXXXXXXx
-    15   │ node_key: N-XXXXXXXXXX-XXXXXXXXXXXXXx...
+      # The name of the service account to use.
+      # If not set and create is true, a name is generated using the fullname template
+      node_id: _REPACE_ME_
+      node_key: _REPACE_ME_
     ```
+
+1. Using a text editor, replace the placeholders ("`_REPACE_ME_`") with your own
+   `node_id` and `node_key`. You can find these in on you node page as you hover
+   over the blurred out Node ID and Keys
+
+    ![nova new node](media/image21.png)
+
+    ```yaml
+    # deployments/nova/nova-http.yaml
+
+      node_id: XXXXXXXX_XXX-XXXX-XXXXXXX_XXXXXX # <--enter your unique node_id
+      node_key: N-XXXXXXXXX_XXXXXXXXX_XXXXXXXXX # <--enter your unique node_key
+    ```
+
+1. Inspect the [nova-http.yaml](../../deployments/nova/nova-http.yaml) *file provided*
+   again an notice secions that are commented out. We have purposely commented
+   out port definitions for "`port443`" as we will not be exposing a HTTPS
+   initally
+
+    ```yaml
+      deployment_port_map: # Port mappings for the kubernetes deployment
+        #port 1080 is used for Nova traffic
+        port80:
+          containerPort: 80
+          protocol: TCP
+        # port443:              #<--- COMMENT OUT OR REMOVE
+        #   containerPort: 443  #<--- COMMENT OUT OR REMOVE
+        #   protocol: TCP       #<--- COMMENT OUT OR REMOVE
+
+      service_port_map:
+        port80:
+          name: port80
+          port: 80
+          targetPort: 80
+        #port443:          #<--- COMMENT OUT OR REMOVE
+        #  name: port443   #<--- COMMENT OUT OR REMOVE
+        #  port: 443       #<--- COMMENT OUT OR REMOVE
+        #  targetPort: 443 #<--- COMMENT OUT OR REMOVE
+    ```   
 
 ### Install Nova for Kubernetes using Helm 
 
@@ -96,7 +176,7 @@ nodes deployed
     ```bash
     #. Replace <release_name> with your own name, e.g. nova
     # $ helm install <release_name> -f nova.yaml nova-helm/nova
-    $ helm install nova -f nova.yml nova-helm/nova
+    $ helm install nova -f deployments/nova/nova-http.yaml nova-helm/nova
 
     NAME: nova
     LAST DEPLOYED: Thu May  5 22:37:48 2022
@@ -106,9 +186,10 @@ nodes deployed
     TEST SUITE: None
     ```
 
-  You may have seen this screen if you had the Node page up in the Nova
-  controller during time of `helm install`:
+    You may have seen this screen if you had the Node page up in the Nova
+    controller during time of `helm install`:
 
+    ![nova new node](media/image22.png)
     ![nova new node](media/image18.png)
 
 1. Inspect the helm deployment. The namespace `nova-ns` is created and is where
@@ -157,7 +238,7 @@ nodes deployed
 
 ### Troubleshooting Errors
 
-**Errors?** If you have errors with the deployment, see [Troubleshooting Nova Deployment](#troubleshooting)
+**Errors?** If you have errors with the deployment, see [troubleshooting](troubleshooting-nova-deployment.md)
 
 Congratulations, you have deployed the Nova worker node. Its now ready to
 have an ADC policy attached to it and start takeing on workloads. We will to that next.

@@ -17,9 +17,9 @@ From our network utility container, *inside* the kubernetes cluster
 
 1. Make a internal request using `curl` to the `moon-svc` service:
   
-  ```bash
-  kubectl exec -i -t network-tools -- curl  _http._tcp.moon-svc.solar-system.svc.cluster.local:8080
-  ```
+    ```bash
+    kubectl exec -i -t network-tools -- curl  _http._tcp.moon-svc.solar-system.svc.cluster.local:8080
+    ```
 
 1. Make a internal request using `curl` to the nova worker node (pod) directly using the `clusterIP`:
 
@@ -56,6 +56,12 @@ From our network utility container, *inside* the kubernetes cluster
   ```
 
 ## Test access to our application from *outside* the kubernetes cluster
+
+From our a external client machine, *outside* the kubernetes cluster
+
+
+![Test connectivity to our application from *outside* the kubernetes cluster](media/image21.png)
+
 
 1. Find the the external DNS name or Public IP address associated to the
    `loadBalancer` for the Nova (`nova-srv`) service.

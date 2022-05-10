@@ -59,17 +59,17 @@ pods in a "Headless" Services.
    a utility Docker network troubleshooting container to run a DNS lookup. First
    deploy the network utility pod
 
-   ```bash
-   # Use this manifest to create the network utility Pod:
-   kubectl apply -f deployments/tools/network-tools.yaml
-   pod/network-tools created
+      ```bash
+      # Use this manifest to create the network utility Pod:
+      kubectl apply -f deployments/tools/network-tools.yaml
+      pod/network-tools created
 
-   # verify it's status
-   kubectl get pods network-tools
+      # verify it's status
+      kubectl get pods network-tools
 
-   NAME           READY    STATUS    RESTARTS   AGE
-   network-tools   1/1     Running   0          37s
-   ```
+      NAME           READY    STATUS    RESTARTS   AGE
+      network-tools   1/1     Running   0          37s
+      ```
 
 ### Run DNS checks on "Normal" Service
 
@@ -83,37 +83,37 @@ manifest file](../../deployments/simple-app/simple-app-service.yaml) which
     `dig` or in that environment. If you see something like the following when
     querying for the **sun** service, DNS is working correctly.
 
-   ```bash
-   # Find out Sun Application
-   kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
+      ```bash
+      # Find out Sun Application
+      kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
 
-   Server:         10.100.0.10
-   Address:        10.100.0.10#53
+      Server:         10.100.0.10
+      Address:        10.100.0.10#53
 
-   Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
-   Address: 10.100.130.214
-   ```
-   We have confirmed the following: 
-   * The Service Discovery Address "`_http._tcp.sun-svc.solar-system.svc.cluster.local`" resolves to the
-    `clusterIP` address of `10.100.130.214` as it is a "normal" service
-    * `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
+      Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
+      Address: 10.100.130.214
+      ```
+      We have confirmed the following: 
+      * The Service Discovery Address "`_http._tcp.sun-svc.solar-system.svc.cluster.local`" resolves to the
+      `clusterIP` address of `10.100.130.214` as it is a "normal" service
+      * `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
   
 1.  Run `kubectl exec` to do a `nslookup`once again for the **moon** service
 
-   ```bash
-   # Find out Moon Application
-   kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
+      ```bash
+      # Find out Moon Application
+      kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
 
-  Server:         10.100.0.10
-  Address:        10.100.0.10#53
+      Server:         10.100.0.10
+      Address:        10.100.0.10#53
 
-  Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
-  Address: 10.100.195.82
-   ```
-   We have confirmed the following: 
-   * The Service Discovery Address "` _http._tcp.moon-svc.solar-system.svc.cluster.local`" resolves to the
-    `clusterIP` address of `10.100.195.82` as it is a "normal" service
-   * Again, we see `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
+      Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
+      Address: 10.100.195.82
+      ```
+      We have confirmed the following: 
+      * The Service Discovery Address "` _http._tcp.moon-svc.solar-system.svc.cluster.local`" resolves to the
+      `clusterIP` address of `10.100.195.82` as it is a "normal" service
+      * Again, we see `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
 
 ### Replace with "Headless" Service
 
@@ -125,45 +125,45 @@ services and load balance the pods directly.
   [manifest](../../deployments/simple-app/simple-app-headless-service.yaml) that
   **explicitly sets** `clusterIP: None` 
   
-  ```bash
-  # Inspect the Manifest file to change to headless service
-  bat deployments/simple-app/simple-app-headless-service.yaml
+   ```bash
+   # Inspect the Manifest file to change to headless service
+   bat deployments/simple-app/simple-app-headless-service.yaml
 
-   6   │ spec:
-   7   │   clusterIP: None
-   ... | 
-  23   │ spec:
-  24   │   clusterIP: None
-  ```
+   spec:
+      clusterIP: None
+      #... 
+   spec:
+      clusterIP: None
+   ```
 1. Delete the existing "normal" services, `moon-svc` and `sun-svc` then apply
    the alternative manifest, recreating the services as "headless"
   
-  ```bash
-  # Check services names
-  kubectl get service -n solar-system
-  NAME       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
-  moon-svc   ClusterIP   10.100.195.82    <none>        80/TCP    6h36m
-  sun-svc    ClusterIP   10.100.130.214   <none>        80/TCP    6h36m
-  ```
-  ```bash
-  # Delete existing "normal" services, `moon-svc` and `sun-svc` in the namespace solar-system
-  kubectl delete service moon-svc -n solar-system
-  kubectl delete service sun-svc -n solar-system
-  
-  service "moon-svc" deleted 
-  service "sun-svc" deleted 
-  ```
-  ```bash
-  # Check the "normal" Services are deleted
-  kubectl get service -n solar-system
-  
-  No resources found in solar-system namespace.
+   ```bash
+   # Check services names
+   kubectl get service -n solar-system
+   NAME       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+   moon-svc   ClusterIP   10.100.195.82    <none>        80/TCP    6h36m
+   sun-svc    ClusterIP   10.100.130.214   <none>        80/TCP    6h36m
+   ```
+   ```bash
+   # Delete existing "normal" services, `moon-svc` and `sun-svc` in the namespace solar-system
+   kubectl delete service moon-svc -n solar-system
+   kubectl delete service sun-svc -n solar-system
+   
+   service "moon-svc" deleted 
+   service "sun-svc" deleted 
+   ```
+   ```bash
+   # Check the "normal" Services are deleted
+   kubectl get service -n solar-system
+   
+   No resources found in solar-system namespace.
 
-  ```
-  ```bash
-  #  apply the alternative manifest to recreate the services as "headless"
-  kubectl apply -f deployments/simple-app/simple-app-headless-service.yaml
-  ``` 
+   ```
+   ```bash
+   #  apply the alternative manifest to recreate the services as "headless"
+   kubectl apply -f deployments/simple-app/simple-app-headless-service.yaml
+   ``` 
 
 ### Run DNS checks on "Headless" Service
 
@@ -175,96 +175,96 @@ so we know to expect exactly two SRV records, one for each pod in the service
 1.  Scale out the sun and moon deployments to multiple pods, we can edit the
    manifest `yaml` file and reapply the config, or simply with a `kubectl scale` command: 
 
-  ```bash
-  kubectl scale deployments/moon --replicas=2 -n solar-system
-  kubectl scale deployments/sun --replicas=2 -n solar-system
+   ```bash
+   kubectl scale deployments/moon --replicas=2 -n solar-system
+   kubectl scale deployments/sun --replicas=2 -n solar-system
 
-  deployment.apps/moon scaled
-  deployment.apps/sun scaled
-  ```
+   deployment.apps/moon scaled
+   deployment.apps/sun scaled
+   ```
 
 1.  Now that the our services are "headless" and scaled to two pods each, you
     can use `kubectl exec` to do a `nslookup` or `dig` and query  the **sun**
     service and check DNS is working correctly.
 
-   ```bash
-   # Find out Sun Application
-   kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
+      ```bash
+      # Find out Sun Application
+      kubectl exec -i -t network-tools -- nslookup  _http._tcp.sun-svc.solar-system.svc.cluster.local
 
-   Server:         10.100.0.10
-   Address:        10.100.0.10#53
- 
-   Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
-   Address: 192.168.72.194
-   Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
-   Address: 192.168.32.100
-   ```
+      Server:         10.100.0.10
+      Address:        10.100.0.10#53
    
-   We have confirmed the following: 
-   * The Service Discovery Address
-    "`_http._tcp.sun-svc.solar-system.svc.cluster.local`" resolves to two pods,
-    with the address `192.168.72.194` and `192.168.32.100`, as it is a "headless"
-    service
-    * `kube-dns` is the internal kubernetes DNS and is available on
-    `10.100.0.10:53`
+      Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
+      Address: 192.168.72.194
+      Name:   _http._tcp.sun-svc.solar-system.svc.cluster.local
+      Address: 192.168.32.100
+      ```
+   
+      We have confirmed the following: 
+      * The Service Discovery Address
+      "`_http._tcp.sun-svc.solar-system.svc.cluster.local`" resolves to two pods,
+      with the address `192.168.72.194` and `192.168.32.100`, as it is a "headless"
+      service
+      * `kube-dns` is the internal kubernetes DNS and is available on
+      `10.100.0.10:53`
   
 1.  Run `kubectl exec` to do a `nslookup`once again for the **moon** service
 
-   ```bash
-   # Find out Moon Application
-   kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
+      ```bash
+      # Find out Moon Application
+      kubectl exec -i -t network-tools -- nslookup  _http._tcp.moon-svc.solar-system.svc.cluster.local
 
-   Server:         10.100.0.10
-   Address:        10.100.0.10#53
- 
-   Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
-   Address: 192.168.70.95
-   Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
-   Address: 192.168.26.52
-   ```
-   We have confirmed the following: 
-* The Service Discovery Address
-    "`_http._tcp.moon-svc.solar-system.svc.cluster.local`" resolves to two pods,
-    with the address `192.168.70.95` and `192.168.26.52`, as it is a "headless"
-    service
-   * Again, we see `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
+      Server:         10.100.0.10
+      Address:        10.100.0.10#53
+   
+      Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
+      Address: 192.168.70.95
+      Name:   _http._tcp.moon-svc.solar-system.svc.cluster.local
+      Address: 192.168.26.52
+      ```
+      We have confirmed the following: 
+         * The Service Discovery Address
+         "`_http._tcp.moon-svc.solar-system.svc.cluster.local`" resolves to two pods,
+         with the address `192.168.70.95` and `192.168.26.52`, as it is a "headless"
+         service
+         * Again, we see `kube-dns` is the internal kubernetes DNS and is available on `10.100.0.10:53`
 
 ### See load balancing via service in action
 
 1. Make some `curl` request to ther service discovery address from the network
    utility container and witness request "load balance" between all pods *randomly*
 
-   ```bash
-   # Sun
-   kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.sun-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+      ```bash
+      # Sun
+      kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.sun-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
 
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.32.100:8080
-   Server address: 192.168.32.100:8080
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.32.100:8080
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.72.194:8080
-   Server address: 192.168.32.100:8080
-   ```
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.32.100:8080
+      Server address: 192.168.32.100:8080
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.32.100:8080
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.72.194:8080
+      Server address: 192.168.32.100:8080
+      ```
 
-   ```bash
-   # Moon
-   kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+      ```bash
+      # Moon
+      kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
 
-   Server address: 192.168.70.95:8080
-   Server address: 192.168.26.52:8080
-   Server address: 192.168.26.52:8080
-   Server address: 192.168.70.95:8080
-   Server address: 192.168.70.95:8080
-   Server address: 192.168.26.52:8080
-   Server address: 192.168.70.95:8080
-   Server address: 192.168.26.52:8080
-   Server address: 192.168.26.52:8080
-   Server address: 192.168.26.52:8080
-   ```
+      Server address: 192.168.70.95:8080
+      Server address: 192.168.26.52:8080
+      Server address: 192.168.26.52:8080
+      Server address: 192.168.70.95:8080
+      Server address: 192.168.70.95:8080
+      Server address: 192.168.26.52:8080
+      Server address: 192.168.70.95:8080
+      Server address: 192.168.26.52:8080
+      Server address: 192.168.26.52:8080
+      Server address: 192.168.26.52:8080
+      ```
 
 
 ### Optional: Use kubectl to find kube-dns address
@@ -280,16 +280,16 @@ and add and remove endpoints as services scale in the kubernetes cluster
 
 1. Run the following command to find the `CLUSTER-IP` of the `kube-dns` service
 
-  ```bash
-  kubectl get service -o wide -n kube-system 
+   ```bash
+   kubectl get service -o wide -n kube-system 
 
-  NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE    SELECTOR
-  kube-dns   ClusterIP   10.100.0.10   <none>        53/UDP,53/TCP   7d6h   k8s-app=kube-dns
-  ```
+   NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE    SELECTOR
+   kube-dns   ClusterIP   10.100.0.10   <none>        53/UDP,53/TCP   7d6h   k8s-app=kube-dns
+   ```
 
-  For example, the `kube-dns` address is `10.100.0.10`. This is in fact the
-  default address for AWS EKS. Again,  Keep a note of this, we will need it when
-  setting up our backend groups using DNS service Discovery next.
+   For example, the `kube-dns` address is `10.100.0.10`. This is in fact the
+   default address for AWS EKS. Again,  Keep a note of this, we will need it when
+   setting up our backend groups using DNS service Discovery next.
 
 Great, Now we have a better understanding of services and how that affects load
 balancing in Nova. We are now ready to configure our backends. We will to that next.
