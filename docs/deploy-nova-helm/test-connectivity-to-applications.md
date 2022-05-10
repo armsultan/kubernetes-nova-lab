@@ -114,3 +114,18 @@ NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP             
 service/nova-svc        LoadBalancer   10.100.214.213   af3ddfb0668604150b92812938fadf8b-429243784.us-west-2.elb.amazonaws.com    443:31101/TCP,80:31574/TCP,1080:32260/TCP   40m
 service/test-nova-svc   LoadBalancer   10.100.32.172    a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com   80:31623/TCP                                31m 
 ```
+
+And now try to curl the `loadBalancer` `EXTERNAL-IP`
+
+```bash
+curl a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com
+
+Server name: moon-6cf747975f-cvj88
+Server address: 192.168.5.79:8080
+Status code: 200
+URI: /
+Cookies: 
+User-Agent: curl/7.74.0
+Date: 10/May/2022:04:26:41 +0000
+Request ID: b5006d244f66dd3d9cb35f240aad7676
+```
