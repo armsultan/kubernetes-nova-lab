@@ -1,8 +1,35 @@
 WIP:
 
-Is scaling nova-dpl or multiple nova workers supported? (default is one)
 
-What about deploying in a daemonset?
+**KNOWN ISSUE: Connecting from external**
+
+If you have issues with External connectivity, it could be because of the cloud
+providers `loadBalancer` service health checking port 443 which is NOT in use
+thus far in this lab
+
+To potentally resolve this issue, try deploy another `loadBalancer` service,
+only exposing and mapping port 80 with [this
+manifest](deployments/nova/working-lb.yaml) provided:
+
+```bash
+kubectl apply -f deployments/nova/working-lb.yaml
+```
+
+And then check the `loadBalancer` service was deployed, in the example below it
+is seen as`service/test-nova-svc`
+
+```bash
+kubectl get pods,deployments,services -n nova-ns
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/nova-dpl-586fd467db-8zlg7   1/1     Running   0          40m
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nova-dpl   1/1     1            1           40m
+
+NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
+service/nova-svc        LoadBalancer   10.100.214.213   af3ddfb0668604150b92812938fadf8b-429243784.us-west-2.elb.amazonaws.com    443:31101/TCP,80:31574/TCP,1080:32260/TCP   40m
+service/test-nova-svc   LoadBalancer   10.100.32.172    a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com   80:31623/TCP                                31m 
+```
 
 ```bash
 kubectl scale deployments/nova-dpl  --replicas=3 -n nova-ns
