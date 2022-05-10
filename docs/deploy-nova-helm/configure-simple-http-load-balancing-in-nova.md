@@ -104,31 +104,19 @@ backends, our **sun** and **moon** applications, to the internet
 
   ![nova new node](media/image12.png)
 
-  For this excerise we can leave the configurations in the **Performance**, **Security** and **Rules** tab as defaults,
-  (feel free to inspect those settings)
+  For this inital setp we can leave the configurations in the **Performance**,
+  **Security** and **Rules** tab as defaults, (feel free to inspect those
+  settings)
 
-  Hit the **Update ADC** button to save changes and then got to the
-  **Attachments** tab to complete our configuration
+  Hit the **Update ADC** button to save changes and then go to the
+  **Attachments** tab.
 
-1. Complete the **Attachments** configurations of the a new ADC with the following details:
-  * **Nodes**: "`k8s-nova`" 
+1. In the **Attachements** tab, intentionally leave the Node blank since we will
+   use the Autojoin feature of Nova
 
-  ![nova new node](media/image13.png)
-
-  For this excerise we can leave all other configurations as defaults (feel free to inspect those settings)
-
-  Hit the **Update Attachments** button to complete our configuration
-
-1. After a few seconds the New ADC should successfully get deployed to our Nova node in Kubernetes
-
-  ![nova new node](media/image14.png)
-
-  ![nova new node](media/image12.png)
-
-Great, we have completed a simple HTTP Load Balancing configuration and should
-be able to access our applications from inside the kubernetes cluster and from
-the internet!
-
+Great, we have configured an ADC policy with a simple HTTP Load Balancing
+configuration. Next step is to deploy our Nova ADC worker Nodes in our
+Kubernetes cluster using Nova's AutoJoin mechanism! 
 ---
 
-Go back to [Table of Contents](../../README.md)h 
+Go back to [Table of Contents](../../README.md)

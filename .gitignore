@@ -2,5 +2,6 @@
 nova.yaml
 nova.yml
 nova-test.yaml
+nova-scale.yml
 # Dont save .aws credentials or config
 .aws/*

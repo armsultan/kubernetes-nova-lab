@@ -1,7 +1,9 @@
 # Test access to our applications
 
-We can run some quick tests from a pod *inside* the kubernetes cluster and from a
-external client over the internet
+While we wait (<5min) for the `loadBalancer`'s `EXTERNAL-IP`, a long AWS elb 
+address, to become available,  We can run some quick tests from a pod *inside* 
+the kubernetes cluster, then from a external client over the internet, *outside*
+the kubernetes cluster.
 
 ## Test connectivity to our application from *inside* the kubernetes cluster
 
@@ -21,11 +23,22 @@ From our network utility container, *inside* the kubernetes cluster
     kubectl exec -i -t network-tools -- curl  _http._tcp.moon-svc.solar-system.svc.cluster.local:8080
     ```
 
-1. Make a internal request using `curl` to the nova worker node (pod) directly using the `clusterIP`:
+1. Make a internal request using `curl` to the nova worker node (pod) directly using the `CLUSTER-IP`:
+
+    Find the `CLUSTER-IP` first
+
+    ```bash
+    # List services in the namespace, nova-ns
+    kubectl get services -n nova-ns
+
+    # OR save to a variable directly
+    CLUSTERIP=$(kubectl describe svc/nova-svc -n nova-ns | grep IP: | awk '{print $2;}')
+    echo $CLUSTERIP
+    ```
 
     ```bash
     # using the default / path
-    kubectl exec -i -t network-tools -- curl 10.100.138.162 -I
+    kubectl exec -i -t network-tools -- curl $CLUSTERIP -I
 
     HTTP/1.1 200 OK
     Date: Fri, 06 May 2022 16:45:50 GMT
@@ -42,7 +55,7 @@ From our network utility container, *inside* the kubernetes cluster
    a round robin manner:
 
   ```bash
-  kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://10.100.138.162 | grep 'Server address'; done"
+  kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://$CLUSTERIP | grep 'Server address'; done"
   # You can see we have been load balanced in "Round Robin":
   Server address: 192.168.26.52:8080
   Server address: 192.168.70.95:8080
@@ -67,7 +80,8 @@ From our a external client machine, *outside* the kubernetes cluster
 
     ```bash
     # Get External loadBalancer address
-    NOVA_LB=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}') 
+    EXTERNALIP=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+    echo $EXTERNALIP
     # Optional: Get the IPv4 Address
     # NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
     ```
@@ -77,55 +91,29 @@ From our a external client machine, *outside* the kubernetes cluster
 
     ```bash
     # Using curl 
-    curl http://$NOVA_LB
+    curl http://$EXTERNALIP
 
     # Using a web browser - get the DNS or IP address and enter into your web browser
-    echo $NOVA_LB
-
+    echo $EXTERNALIP
     ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
     ```
+
+Congratulations, you have deployed Nova in kubernetes! Connectivity to the
+application works from inside the kubernetes cluster and from outside the
+cluster, over the internet!
+
+We will scale out our Nova ADC worker Nodes next and see the Nova's AutoJoin
+Cluster in action.
+
+---
+
+### Troubleshooting Errors
 
 **KNOWN ISSUE: Connecting from external**
 
 If you have issues with External connectivity, it could be because of the cloud
 providers `loadBalancer` service health checking port 443 which is NOT in use
-thus far in this lab
+so far in this lab. See the [troubleshooting guide](troubleshooting-nova-deployment.md#loadBalancer-http80-only) to resolve the issue
+---
 
-To potentally resolve this issue, try deploy another `loadBalancer` service,
-only exposing and mapping port 80 with [this
-manifest](deployments/nova/working-lb.yaml) provided:
-
-```bash
-kubectl apply -f deployments/nova/working-lb.yaml
-```
-
-And then check the `loadBalancer` service was deployed, in the example below it
-is seen as`service/test-nova-svc`
-
-```bash
-kubectl get pods,deployments,services -n nova-ns
-NAME                            READY   STATUS    RESTARTS   AGE
-pod/nova-dpl-586fd467db-8zlg7   1/1     Running   0          40m
-
-NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nova-dpl   1/1     1            1           40m
-
-NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
-service/nova-svc        LoadBalancer   10.100.214.213   af3ddfb0668604150b92812938fadf8b-429243784.us-west-2.elb.amazonaws.com    443:31101/TCP,80:31574/TCP,1080:32260/TCP   40m
-service/test-nova-svc   LoadBalancer   10.100.32.172    a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com   80:31623/TCP                                31m 
-```
-
-And now try to curl the `loadBalancer` `EXTERNAL-IP`
-
-```bash
-curl a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com
-
-Server name: moon-6cf747975f-cvj88
-Server address: 192.168.5.79:8080
-Status code: 200
-URI: /
-Cookies: 
-User-Agent: curl/7.74.0
-Date: 10/May/2022:04:26:41 +0000
-Request ID: b5006d244f66dd3d9cb35f240aad7676
-```
+Go back to [Table of Contents](../../README.md)

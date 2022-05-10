@@ -121,7 +121,8 @@ We have a preconfigured manifests for the following setup:
 ## Scaling the deployment
 
 1. To scale out the sun and moon deployments to multiple pods, we can edit the
-   manifest `yaml` file and reapply the config, or simply with a `kubectl scale` command: 
+   manifest `yaml` file and reapply the config, or simply with a `kubectl scale`
+   command: 
 
     ```bash
     kubectl scale deployments/moon --replicas=3 -n solar-system
@@ -131,10 +132,11 @@ We have a preconfigured manifests for the following setup:
     deployment.apps/sun scaled
     ```
 
-1. Run the `kubectl` get command with `-o wide` flag option to see which Kubernetes
-   worker nodes the sun and moon pods were deployed on
+1. Run the `kubectl` get command with `-o wide` flag option to see which
+   Kubernetes worker nodes the sun and moon pods were deployed on
 
-    If we executed the last command correctly,  we will have deployed four sun pods and three moon pods
+    If we executed the last command correctly,  we will have deployed four sun
+    pods and three moon pods
 
     ```bash
     kubectl get pods,deployments,services -n solar-system -o wide
@@ -157,9 +159,9 @@ We have a preconfigured manifests for the following setup:
     service/sun-svc    ClusterIP   10.100.130.214   <none>        80/TCP    4m44s   app=sun
     ```
 
-Congratulations, you have deployed the sample application but we still cannot
-access our applications from outside the kubernetes cluster yet. We will figure
-that out next.
+Congratulations, you have deployed the sample application. We need to cover off
+an important point on "normal" vs "headless" services and how it affects DNS
+service discovery. We will figure that out next.
 
 ---
 

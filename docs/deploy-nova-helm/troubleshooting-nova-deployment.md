@@ -1,327 +1,243 @@
-WIP:
+# Troubleshooting Nova Deployment in kubernetes
 
-
-**KNOWN ISSUE: Connecting from external**
+## <a id='loadBalancer-http80-only'></a> KNOWN ISSUE: Cannot Connecting from external through `LoadBalancer`
 
 If you have issues with External connectivity, it could be because of the cloud
-providers `loadBalancer` service health checking port 443 which is NOT in use
-thus far in this lab
+providers `loadBalancer` service health checking port 443 which does cause an
+issue if not in use
 
-To potentally resolve this issue, try deploy another `loadBalancer` service,
+To resolve this issue, try deploy another `loadBalancer` service,
 only exposing and mapping port 80 with [this
 manifest](deployments/nova/working-lb.yaml) provided:
 
-```bash
-kubectl apply -f deployments/nova/working-lb.yaml
-```
+1. Deploy `loadBalancer` service, only exposing and mapping port 80
 
-And then check the `loadBalancer` service was deployed, in the example below it
-is seen as`service/test-nova-svc`
-
-```bash
-kubectl get pods,deployments,services -n nova-ns
-NAME                            READY   STATUS    RESTARTS   AGE
-pod/nova-dpl-586fd467db-8zlg7   1/1     Running   0          40m
-
-NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nova-dpl   1/1     1            1           40m
-
-NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
-service/nova-svc        LoadBalancer   10.100.214.213   af3ddfb0668604150b92812938fadf8b-429243784.us-west-2.elb.amazonaws.com    443:31101/TCP,80:31574/TCP,1080:32260/TCP   40m
-service/test-nova-svc   LoadBalancer   10.100.32.172    a6f6110e936f74d3484d6d1c5dce8bdb-1861995351.us-west-2.elb.amazonaws.com   80:31623/TCP                                31m 
-```
-
-```bash
-kubectl scale deployments/nova-dpl  --replicas=3 -n nova-ns
-watch kubectl get pods,deployments,services -n nova-ns 
-
-
-NAME                           READY   STATUS    RESTARTS   AGE
-pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          21h
-pod/nova-dpl-99fcc6c69-7xqbs   1/1     Running   0          2m16s
-pod/nova-dpl-99fcc6c69-8v689   1/1     Running   0          2m16s
-
-NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nova-dpl   3/3     3            3           21h
-
-NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
-service/nova-svc   LoadBalancer   10.100.138.162   ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com   443:32297/TCP,80:32643/TCP,1080:31318/TCP   21h
-```
-
-kubectl exec -i -t network-tools -- dig ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
-kubectl exec -i -t network-tools -- curl ad95405e2bbfc4e97af5866540135fe2-1347037189.us-west-2.elb.amazonaws.com
-
-## Test access to our application from *inside* the kubernetes cluster
-
-From our network utility container, *inside* the kubernetes cluster
-
-1.  Make a internal request using `curl` to the `sun-svc` service:
     ```bash
-    kubectl exec -i -t network-tools -- curl  _http._tcp.sun-svc.solar-system.svc.cluster.local:8080
+    kubectl apply -f deployments/nova/working-lb.yaml
     ```
 
-1. Make a internal request using `curl` to the `moon-svc` service:
+1. Check the `loadBalancer` service was deployed, in the example below it is
+   seen as`service/test-nova-svc`
+
     ```bash
-    kubectl exec -i -t network-tools -- curl  _http._tcp.moon-svc.solar-system.svc.cluster.local:8080
+    kubectl get pods,deployments,services -n nova-ns
+    NAME                            READY   STATUS    RESTARTS   AGE
+    pod/nova-dpl-586fd467db-8zlg7   1/1     Running   0          40m
+
+    NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+    deployment.apps/nova-dpl   1/1     1            1           40m
+
+    NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                                     AGE
+    service/nova-svc        LoadBalancer   10.100.214.213   af3ddfb0668604150b92812938fadf8b-429243784.us-west-2.elb.amazonaws.com    443:31101/TCP,80:31574/TCP,1080:32260/TCP   40m
+    service/test-nova-svc   LoadBalancer   10.100.32.172    a078ddbf4c95340ce8386d1fc774842e-1934362118.us-west-2.elb.amazonaws.com   80:31623/TCP                                31m 
     ```
 
-1. Make a internal request using `curl` to the nova worker node (pod) directly using the `clusterIP`:
-    ```bash
-    # using the default / path
-    kubectl exec -i -t network-tools -- curl 10.100.138.162 -I
+1. Now try external connectivity via the `loadBalancer` `EXTERNAL-IP` using
+   `curl`. First find the the external DNS name or Public IP address associated to the
+   `loadBalancer` for the Nova (`test-nova-svc`) service.
 
-    HTTP/1.1 200 OK
-    Date: Fri, 06 May 2022 16:45:50 GMT
-    Content-Type: text/plain
-    Content-Length: 210
-    Expires: Fri, 06 May 2022 16:45:49 GMT
-    Cache-Control: no-cache
-    Server: NOVA    # <---This confirms we have been proxied by the Nova ADC worker node
-    Set-Cookie: NOVAID-3da547439a9e6285686202e9c8f610b1=dba2f13a1909f004; path=/; HttpOnly
+    ```bash
+    # Get External loadBalancer address
+    EXTERNALIP=$(kubectl get services/test-nova-svc  -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+    echo $EXTERNALIP
+    # Optional: Get the IPv4 Address
+    # NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
     ```
 
-1. Make a series of internal requests using `curl` to the nova worker node (pod)
-   directly using the `clusterIP`, via Nova, we will be equally load balanced in
-   a round robin manner:
+1. Make a `curl` request and test external connectivity
+    
     ```bash
-    kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://10.100.138.162 | grep 'Server address'; done"
+    curl $EXTERNALIP
 
-    # You can see we have been load balanced in "Round Robin":
-    Server address: 192.168.26.52:8080
-    Server address: 192.168.70.95:8080
-    Server address: 192.168.26.52:8080
-    Server address: 192.168.70.95:8080
-    Server address: 192.168.26.52:8080
-    Server address: 192.168.70.95:8080
-    Server address: 192.168.26.52:8080
-    Server address: 192.168.70.95:8080
-    Server address: 192.168.26.52:8080
-    Server address: 192.168.70.95:8080
+    Server name: moon-6cf747975f-cvj88
+    Server address: 192.168.5.79:8080
+    Status code: 200
+    URI: /
+    Cookies: 
+    User-Agent: curl/7.74.0
+    Date: 10/May/2022:19:00:33 +0000
+    Request ID: a61d47ae7b2c64b4796dd8275ffdedce
+    ```
+------
+
+
+## <a id='insufficient-resources'></a> Nova pods are `pending` due to `Insufficient memory` or `Insufficient CPU`
+
+
+By default, the deployment defines resources requests and limits. While this is
+a kubernetes administration best pratice, if you are testing the Nova
+deployment, understandably, you could be deploying on low resourced kubernetes
+clusters (e.g. [Digital
+Ocean's](https://docs.digitalocean.com/products/kubernetes/) smallest and Basic
+cluster size).  In the case of `Insufficient memory` or  `Insufficient CPU`
+errors, your pods will be stuck in a If pods are `pending` state. 
+
+The default `resources` `requests` and `limits` defined on the Nova
+ADC Worker pod is seen in the snippet below:
+
+  ```yaml
+  resources:
+    limits:
+      cpu: 300m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  ```
+
+
+If pods are `pending` due to `Insufficient memory` or `Insufficient CPU` we can
+set lower resource requirements:
+
+1. Export the Nova deployment (`nova-dpl`)  manifest to a editable `yaml` file
+
+    ```bash
+    kubectl get deployment.apps/nova-dpl -n nova-ns -oyaml > nova-less-resources.yaml
     ```
 
-## Test access to our application from *outside* the kubernetes cluster
+1. Edit the yaml and lower the resource requests, i.e.
 
-1. Find the LoadBalancer address
+    **Change:**
+    ```yaml
+            resources:
+              limits:
+                cpu: 300m
+                memory: 2Gi
+              requests:
+                cpu: 200m     # <--Edit this
+                memory: 1Gi   # <--Edit this
+    ```
+    **To:**
+    ```yaml
+            resources:
+              limits:
+                cpu: 300m
+                memory: 2Gi
+              requests:
+                cpu: 50m
+                memory: 200Mi
+    ```
 
-kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+3. Apply changes define in the manifest file using `kubectl apply`
 
-1. Get the loadBalancer Address for Nova (`nova-srv`) service, then run a `curl`
-   command to test access from *outside* the kubernetes cluster
-
-# Get External loadBalancer address
-NOVA_LB=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
-
-# Optional: Get a IPv4 Address
-NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')
-
-# Nova Service
-curl -s http://$NOVA_LB | grep title
-
-
-## Troubleshooting
-
-If the Pod is stuck in a `pending`  state, we can troubleshoot with the following:
-
-```bash
-kubectl get events -n nova-ns
-```
-
-```
-k logs [pod name] -n nova-ns
-```
-
-```
-k describe [pod name] -n nova-ns
-```
-
-If pods are `pending` due to `Insufficient memory` or `Insufficient CPU`
-
-we can inspect the CPU and memory usage in various ways. one way is using metrics-server.
-If you do not have that install, follow the install instructions from the offical github project page, 
-[metrics-server](https://github.com/kubernetes-sigs/metrics-server)
-
-For example:
-
-Using Helm:
-```bash
-helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-helm upgrade --install metrics-server metrics-server/metrics-server
-
-```
-Or via yaml:
-
-```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-```
-
-Confirm that the Kubernetes Metrics Server has been deployed successfully and is available by entering:
-
-```bash
-kubectl get deployment metrics-server --watch
-NAME             READY   UP-TO-DATE   AVAILABLE   AGE
-metrics-server   1/1     1            1           36s
-```
-now run `kubectl top node` or `kubectl top pod`
-```
-kubectl top node
-NAME                   CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
-pool-gl450ovty-u4m33   38m          4%     919Mi           58%       
-pool-gl450ovty-u4m38   42m          4%     955Mi           60%       
-pool-gl450ovty-u4m3n   28m          3%     889Mi           56%       
-```
-
-Less resources:
-
-1. export the deployment manifest
-
-```bash
-kubectl get deployment.apps/nova-dpl -n nova-ns -oyaml > nova-less-resources.yaml
-```
-
-2. edit the yaml and lower the resource requests, i.e.
-
-**Change:**
-```yaml
-        resources:
-          limits:
-            cpu: 300m
-            memory: 2Gi
-          requests:
-            cpu: 200m
-            memory: 1Gi
-```
-**To:**
-```yaml
-        resources:
-          limits:
-            cpu: 300m
-            memory: 2Gi
-          requests:
-            cpu: 50m
-            memory: 200Mi
-```
-
-3. Apply changes
-
-```bash
-kubectl apply -f nova-less-resources.yaml
-```
+    ```bash
+    kubectl apply -f nova-less-resources.yaml
+    ```
 
 4. Check the deployment
-```
-kubectl get pods,deployments,services -o wide -n nova-ns
-NAME                            READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
-pod/nova-dpl-59c785889b-8wq9w   1/1     Running   0          38s   10.244.1.206   pool-gl450ovty-u4m3n   <none>           <none>
 
-NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                       SELECTOR
-deployment.apps/nova-dpl   1/1     1            1           44m   nova-nvc     novaadc/nova-client:latest   app=nova-nvc,deployment=nova-dpl
+    ```bash
+    kubectl get pods,deployments,services -o wide -n nova-ns
+    NAME                            READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+    pod/nova-dpl-59c785889b-8wq9w   1/1     Running   0          38s   10.244.1.206   pool-gl450ovty-u4m3n   <none>           <none>
 
-NAME               TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                                     AGE   SELECTOR
-service/nova-svc   LoadBalancer   10.245.200.88   161.35.240.12   443:30306/TCP,80:30625/TCP,1080:30631/TCP   44m   app=nova-nvc,deployment=nova-dpl
-```
+    NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                       SELECTOR
+    deployment.apps/nova-dpl   1/1     1            1           44m   nova-nvc     novaadc/nova-client:latest   app=nova-nvc,deployment=nova-dpl
 
-## Finding backend
+    NAME               TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                                     AGE   SELECTOR
+    service/nova-svc   LoadBalancer   10.245.200.88   161.35.240.12   443:30306/TCP,80:30625/TCP,1080:30631/TCP   44m   app=nova-nvc,deployment=nova-dpl
+    ```
+
+## Discovery our DNS service addresses 
 
 
-we can deploy a utility container, network-tools, pod to test requests to our services via it's ClusterIP
-```bash
-# Use this manifest to create our dnsutil Pod:
-kubectl apply -f deployments/tools/network-tools.yaml
+1. Deploy a utility container, `network-tools`, pod to test connectivity to our services via its `ClusterIP`
 
-pod/network-tools created
+  ```bash
+  # Use this manifest to create our dnsutil Pod:
+  kubectl apply -f deployments/tools/network-tools.yaml
 
-# Verify its status
-kubectl get pods network-tools
+  pod/network-tools created
 
-NAME                READY     STATUS    RESTARTS   AGE
-network-tools   1/1       Running   0          <some-time>
-```
+  # Verify its status
+  kubectl get pods network-tools
 
-# moon-svc 
-moon_cluster_ip=$(kubectl get services/moon-svc -n solar-system | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+  NAME                READY     STATUS    RESTARTS   AGE
+  network-tools   1/1       Running   0          <some-time>
+  ```
 
-# sun-svc 
-sun_cluster_ip=$(kubectl get services/sun-svc -n solar-system | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+2. A CLUSTER-IP will exist if you have "normal" services. Find this internal IP
+   address and text connectivity from inside the kubernetes cluster using `curl`
 
-# moon-svc
-kubectl exec -i -t network-tools -- curl http://$moon_cluster_ip -I
+  ```bash
+  # moon-svc 
+  moon_cluster_ip=$(kubectl get services/moon-svc -n solar-system | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
-# sun-svc
-kubectl exec -i -t network-tools -- curl http://$sun_cluster_ip -I
+  # sun-svc 
+  sun_cluster_ip=$(kubectl get services/sun-svc -n solar-system | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
+  # moon-svc
+  kubectl exec -i -t network-tools -- curl http://$moon_cluster_ip -I
+
+  # sun-svc
+  kubectl exec -i -t network-tools -- curl http://$sun_cluster_ip -I
+  ```
 ---
 
 ## Test nova 
 
-
-
-We can inspect the deployment in closer detail by inspecting the output of the
+We can inspect the Nova deployment in closer detail by inspecting the output of the
 deployment using `kubectl describe` or yaml output:
 
-```bash
-k describe deployment nova-dpl -n nova-ns
-```
-
-```bash
-k get deployment nova-dpl -n nova-ns -oyaml
-```
-
-For example, we can see the reource limits
-```
-Note: 
-```yaml
-        resources:
-          limits:
-            cpu: 300m
-            memory: 2Gi
-          requests:
-            cpu: 200m
-            memory: 1Gi
-```
-
-```
-
-
---------------------------------------------------------------------------------
-
-## Troubleshooting
-
-1. A Nova deployment may have one or more of the following symtpoms:
-
-   * `pod` is stuck at `STATUS Pending` 
-   * `deployment` is not 100% ready, e.g. `READY 0/1`
-   * `LoadBalancer` is stuck on`EXTERNAL-IP <pending>`
+  ```bash
+  k describe deployment nova-dpl -n nova-ns
+  ```
 
   ```bash
-  $ kubectl get pods,deployments,services -n nova-ns
-
-  NAME                            READY   STATUS    RESTARTS   AGE
-  pod/nova-dpl-574fb977d6-jzq9f   1/1     Pending   0          3m11s
-
-  NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
-  deployment.apps/nova-dpl   0/1     1            0           3m11s
-
-  NAME               TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                     AGE
-  service/nova-svc   LoadBalancer   10.245.200.88   <pending>     443:30306/TCP,80:30625/TCP,1080:30631/TCP   3m11s
+  k get deployment nova-dpl -n nova-ns -oyaml
   ```
-  
 
+  For example, we can see the resource limits
+  ```
+  Note: 
+  ```yaml
+          resources:
+            limits:
+              cpu: 300m
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 1Gi
+  ```   
 
-The Kubernetes dashboard is another way to quicky understand reasons for errors:
+## Inspect CPU and memory usage on your Kubernetes Cluster
 
-[kubernetes dashboard](media/image3.png)
+We can inspect the CPU and memory usage in various ways. one way is using `metrics-server`.
+If you do not have that install, follow the install instructions from the offical github project page, 
+[metrics-server](https://github.com/kubernetes-sigs/metrics-server)
 
-A Namespace following the following convention: $release_name-nova-ns
-A Deployment with a single replica using the novaadc client container
-A Service with type LoadBalancer
+1. Deploy `metrics-server` using `helm` or using yaml manifest
 
-1. The Nova Node is now configured and this can be confirmed in the Nova Controller
+  **Using Helm:**
+  ```bash
+  helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+  helm upgrade --install metrics-server metrics-server/metrics-server
+  ```
 
-[Nova Node is configured](media/image4.png)
+  **Or via yaml:**
+  ```bash
+  kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+  ```
 
+1. Confirm that the Kubernetes `metrics-server` has been deployed successfully
 
-2. Check eaccess to the LoadBalancer EXTERNAL-IP in web browser or terminal
+  ```bash
+  kubectl get deployment metrics-server --watch
+  NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+  metrics-server   1/1     1            1           36s
+  ```
 
-```
-curl http://161.35.240.12 
-```
+1. Now you can run `kubectl top node` or `kubectl top pod` to see resource usage
+
+  ```bash
+  kubectl top node
+  NAME                   CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+  pool-gl450ovty-u4m33   38m          4%     919Mi           58%       
+  pool-gl450ovty-u4m38   42m          4%     955Mi           60%       
+  pool-gl450ovty-u4m3n   28m          3%     889Mi           56%       
+  ```
+
+Hope these Troubleshooting Guides have been useful!
+---
+
+Go back to [Table of Contents](../../README.md)

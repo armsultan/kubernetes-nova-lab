@@ -292,6 +292,7 @@ and add and remove endpoints as services scale in the kubernetes cluster
    setting up our backend groups using DNS service Discovery next.
 
 Great, Now we have a better understanding of services and how that affects load
-balancing in Nova. We are now ready to configure our backends. We will to that next.
+balancing in Nova. We are now ready to expose our application to the internet
+with Nova. We will to that next.
 
 Go back to [Table of Contents](../../README.md)

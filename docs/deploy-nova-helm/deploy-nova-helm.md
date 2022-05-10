@@ -2,7 +2,15 @@
 
 ## Introduction
 
-Nova for Kubernetes can be easily installed using a [Helm](https://helm.sh/) chart.
+Nova for Kubernetes can be easily installed using a [Helm](https://helm.sh/)
+chart.
+
+Nova supports replicas and scaling in Kubernetes (and any other container
+orchestration platform) using a core component of Nova functionality: [Auto
+Joining](https://nova-docs.snapt.net/adcs_autojoin.html). This allows your
+containers to automatically sync to an ADC setting on your Nova Portal, and be
+up and running in seconds. You retain your centralized control and reporting
+over them, and allow Kubernetes to scale them as required.
 
 Upon install, three Kubernetes components are created. This is the *default* state:
 
@@ -23,7 +31,7 @@ cluster size).  In the case of `Insufficient memory` or  `Insufficient CPU`
 errors, your pods will be stuck in a If pods are `pending` state. 
 
 In an event of a resource error, refer to the section on
-[troubleshooting](troubleshooting-nova-deployment.md)
+[troubleshooting](troubleshooting-nova-deployment.md#insufficient-resources)
 
 See the snippet of the `resources` `requests` and `limits` defined on the Nova
 ADC Worker pod:
@@ -54,7 +62,7 @@ services not defined by default in the provided file.
 Before going any futher, please check you have satisfied the following prerequsites:
 
  * `Helm` installed on client machine (this is included in development container)
- * You are a registed Nova user with a [Snapt Nova Account](https://www.snapt.net/platforms/nova-adc/register)**
+ * You are a registed Nova user with a **[Snapt Nova Account](https://www.snapt.net/platforms/nova-adc/register)**
  * You have running a Kubernetes platform supporting the `Service` type [`LoadBalancer`](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) (Typically supported on all cloud managed kubernetes)
 
 
@@ -86,60 +94,97 @@ When Nova worker nodes deployed in kubernetes are scaled out, the
 `LoadBalancer` will automaticly load balance the cluster of Nova worker
 nodes deployed
 
-## Install and Configure Nova for Kubernetes
+## Locate your ADC AutoJoin Key
 
-### Create a new Nova node on the Nova Controller
+If you're familiar with Nova, you'll be aware that the initial step in deploying
+an ADC is to add Nova nodes. However, for a Kubernetes deployment, **you should
+not manually add Nodes and use them with Kubernetes; instead, use the AutoJoin
+Keys mechanism**. This will automatically provision nodes and provide you with a
+helm chart to use. 
 
-1. Log into your [Nova Dashboard](https://nova.snapt.net/)
-1. Create a new node: **Nodes > New Node** > [Create new node] e.g. "`k8s-nova`"
+A Autojoin Key is available for every ADC created. We already created one in the
+[last exercise](configure-simple-http-load-balancing-in-nova.md) and so a
+AutoJoin key is avaialble for us to use in our deployment 
 
-    ![nova new node](media/image1.png)
+1. Locate your AutoJoin Keys for the ADC we recently configured
+   ("`k8s-solar-system`") from the Nova Controller, under **ADC > Addons >
+   AutoJoin Keys**. You can use the search function if you have a lot of ADCs
+   configured. Click on 
 
-1. You can download helm chart (`nova.yml`) from the "Additional Resources"
-   section on this Node page. **For this excerise, we will use one provided, [nova-http.yaml](../../deployments/nova/nova-http.yaml)**
+    ![AutoJoin](media/image24.png)
 
-    ![nova new node](media/image2.png)
+    ![AutoJoin](media/image25.png)
+
+1. Next to our ADC ("``k8s-solar-system``"), click on the **View Key** button to
+   reveal the AutoJoin Key. 
+
+   **Warning! These keys are private and should be treated like passwords!**
+
+    ![AutoJoin](media/image26.png)
+
+    ![AutoJoin](media/image27.png)
+
+1. *It is not necessary to copy the AutoJoin Key for this exercise*, click the
+   **Close** button to close this window
+
+1. Next to our ADC ("`k8s-solar-system`"), click on the **Helm Chart** button
+   to download the Helm Values file (`nova.yml`). This file includes the private
+   AutoJoin Key for the ADC. Save this into the root directory of your project folder
+
 
 ### Inspect and modify the helm value file
 
-1. Inspect the [nova-http](../../deployments/nova/nova-http) (*file provided*)
-   You will see a place holder for `node_id` and `node_key` which you will need
-   to replace. These IDs are used to identify a Node on your Nova Organization.
-   This is unique to your Nova account. **Keep these private!**
+1. Inspect your downloaded helm chart manifest [nova.yml](../../nova.yml) (*file
+   provided*). You will see the pre-populated `nova_auto_conf` value ( **Keep
+   these values private!**)
 
-    ```bash
-    bat deployments/nova/nova-http..yaml
+   ```bash
+   bat nova.yml
+   ```
 
-      # The name of the service account to use.
-      # If not set and create is true, a name is generated using the fullname template
-      node_id: _REPACE_ME_
-      node_key: _REPACE_ME_
+2. Futher down the file you will see default configurations for `port80` and
+   `port443` under `deployment_port_map` and `service_port_map`. These default
+   configurations assumes a HTTPS service and provisions both **HTTP port 80** and
+   **HTTPS port 443**.
+   
+    ```yaml
+    # IMPORTANT: Only include required ports
+    # If you are not using port 80 and port 443 remove them!
+    deployment_port_map:
+      port80:
+        containerPort: 80
+        protocol: TCP
+
+      port443:              # <-- We do not need this for our HTTP only service
+        containerPort: 443  # <-- We do not need this for our HTTP only service
+        protocol: TCP       # <-- We do not need this for our HTTP only service
+
+    # IMPORTANT: these should match the above
+    service_port_map:
+      port80:
+        name: 'port80'
+        port: 80
+        targetPort: 80
+      port443:              # <-- We do not need this for our HTTP only service
+        name: 'port443'     # <-- We do not need this for our HTTP only service
+        port: 443           # <-- We do not need this for our HTTP only service
+        targetPort: 443     # <-- We do not need this for our HTTP only service
     ```
 
-1. Using a text editor, replace the placeholders ("`_REPACE_ME_`") with your own
-   `node_id` and `node_key`. You can find these in on you node page as you hover
-   over the blurred out Node ID and Keys
+   For our example, we simply need HTTP Port 80 and so we need to "comment out"
+   or remove the `port443` definitions before deploying Nova using Helm
 
-    ![nova new node](media/image21.png)
-
-    ```yaml
-    # deployments/nova/nova-http.yaml
-
-      node_id: XXXXXXXX_XXX-XXXX-XXXXXXX_XXXXXX # <--enter your unique node_id
-      node_key: N-XXXXXXXXX_XXXXXXXXX_XXXXXXXXX # <--enter your unique node_key
-    ```
-
-1. Inspect the [nova-http.yaml](../../deployments/nova/nova-http.yaml) *file provided*
-   again an notice secions that are commented out. We have purposely commented
-   out port definitions for "`port443`" as we will not be exposing a HTTPS
-   initally
+1. Using a text editor, "comment out" or remove the `port443` definitions in the
+   downloaded helm manifest file, `nova.yml` as we will not be exposing a HTTPS
+   initally. Save changes in this file
 
     ```yaml
-      deployment_port_map: # Port mappings for the kubernetes deployment
-        #port 1080 is used for Nova traffic
-        port80:
-          containerPort: 80
-          protocol: TCP
+        # IMPORTANT: Only include required ports
+        # If you are not using port 80 and port 443 remove them!
+        deployment_port_map:
+          port80:
+            containerPort: 80
+            protocol: TCP
         # port443:              #<--- COMMENT OUT OR REMOVE
         #   containerPort: 443  #<--- COMMENT OUT OR REMOVE
         #   protocol: TCP       #<--- COMMENT OUT OR REMOVE
@@ -155,28 +200,33 @@ nodes deployed
         #  targetPort: 443 #<--- COMMENT OUT OR REMOVE
     ```   
 
+1. Your resulting `nova.yml` should look like this example file provided,
+   [nova-http](../../deployments/nova/nova-http.yaml).
+
 ### Install Nova for Kubernetes using Helm 
 
 1. Add and update the Snapt helm repo as outlined in the [Nova helm
    installation Instructions](https://nova.snapt.net/docs/1.0/install_helm) 
 
     ```bash
-    $ helm repo add nova-helm https://snapt.github.io/nova-helm
+    helm repo add nova-helm https://snapt.github.io/nova-helm
 
     "nova-helm" has been added to your repositories
     ```
+
     ```bash
-    $ helm repo update
+    helm repo update
 
     ...Successfully got an update from the "nova-helm" chart repository
     Update Complete. ⎈Happy Helming!⎈
     ```
-1. Now deploy Nova for Kubernetes with our helm values manifest:
+1. Now deploy Nova for Kubernetes with our helm chart manifest file we recently
+   edited for HTTP service only:
 
     ```bash
     #. Replace <release_name> with your own name, e.g. nova
     # $ helm install <release_name> -f nova.yaml nova-helm/nova
-    $ helm install nova -f deployments/nova/nova-http.yaml nova-helm/nova
+    helm install nova -f nova.yml nova-helm/nova
 
     NAME: nova
     LAST DEPLOYED: Thu May  5 22:37:48 2022
@@ -186,17 +236,22 @@ nodes deployed
     TEST SUITE: None
     ```
 
-    You may have seen this screen if you had the Node page up in the Nova
-    controller during time of `helm install`:
+    From the Nodes page (**Nodes > Nodes**) You may have see a new Node appear
+    with its name prefixed with an autogenerated number. The **Status** will
+    change from `initializing` to `online` when it is ready.
+    
+    This is your clustered Nodes that could be one or many Nova ADC worker
+    instances, in Kubernetes, this could be one container (in a pod) or multiple
+    containers (in multiple pods):
 
-    ![nova new node](media/image22.png)
-    ![nova new node](media/image18.png)
+    ![nova new node](media/image28.png)
+    ![nova new node](media/image29.png)
 
 1. Inspect the helm deployment. The namespace `nova-ns` is created and is where
    the `nova` is deployed
 
     ```bash
-    $ kubectl get namespaces
+    kubectl get namespaces
 
     NAME              STATUS   AGE
     default           Active   4d23h
@@ -210,7 +265,7 @@ nodes deployed
 1. Inspect the `nova-ns` namespace
               
     ```bash
-    $ kubectl get pods,deployments,services -n nova-ns
+    kubectl get pods,deployments,services -n nova-ns
 
     NAME                           READY   STATUS    RESTARTS   AGE
     pod/nova-dpl-99fcc6c69-2scb4   1/1     Running   0          16h
@@ -227,21 +282,20 @@ nodes deployed
     * `deployment` is `READY 1/1` (100% Ready)
     * the service type `LoadBalancer` has an assigned `EXTERNAL-IP` (a very long AWS elb address)
 
-    However, we must also confirm the Nova worker Node is registered and connected
-    to the Nova Controller. See next step
+1. Give it some time (<5min) for the `loadBalancer`'s `EXTERNAL-IP`, a long AWS
+   elb address, to DNS resolve. When ready you can test connectivity to your
+   application from outside the kuberntes cluster. We will test that in the next
+   exercise.
 
-1. Find your Nova worker Node under **NODES > Nodes** and view its **Node Status**
+Congratulations, you have deployed Nova in kubernetes! We will test connectivity to
+our application next
 
-    ![nova new node](media/image16.png)
-
-    ![nova new node](media/image17.png)
+---
 
 ### Troubleshooting Errors
 
-**Errors?** If you have errors with the deployment, see [troubleshooting](troubleshooting-nova-deployment.md)
-
-Congratulations, you have deployed the Nova worker node. Its now ready to
-have an ADC policy attached to it and start takeing on workloads. We will to that next.
+**Errors?** If you have errors with the Nova deployment, see
+[troubleshooting](troubleshooting-nova-deployment.md)
 
 ---
 

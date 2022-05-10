@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: novaadc/nova-client:latest
+  repository: novaadc/nova-client-aj:1.0.1
   tag: 0.1.0
   pullPolicy: IfNotPresent
 
@@ -11,30 +11,28 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
 
-node_id: _REPACE_ME_
-node_key: _REPACE_ME_
+nova_auto_conf: 'USE_YOUR_OWN_AUTOJOIN_KEY'
+nova_auto_conf_host: 'nova.snapt.net'
 host: 'poll.nova-adc.com'
 
-deployment_port_map: # Port mappings for the kubernetes deployment
-  #port 1080 is used for Nova traffic
+# IMPORTANT: Only include required ports
+# If you are not using port 80 and port 443 remove them!
+deployment_port_map:
   port80:
     containerPort: 80
     protocol: TCP
-  # port443:
-  #   containerPort: 443
-  #   protocol: TCP
 
-service_port_map: # Port mappings for the kubernetes service
-  #port 1080 is used for Nova traffic
-  port80:  # Map object
-    name: 'port80' # Name of the service port
-    port: 80 # Maps to the port value of the service
-    targetPort: 80 # Maps to the targetPort value of the service
+  # port443:               #<--- COMMENT OUT OR REMOVE
+  #   containerPort: 443   #<--- COMMENT OUT OR REMOVE
+  #   protocol: TCP        #<--- COMMENT OUT OR REMOVE
+
+# IMPORTANT: these should match the above
+service_port_map:
+  port80:
+    name: 'port80'   #<--- COMMENT OUT OR REMOVE
+    port: 80         #<--- COMMENT OUT OR REMOVE
+    targetPort: 80   #<--- COMMENT OUT OR REMOVE
   # port443:
   #   name: 'port443'
   #   port: 443
   #   targetPort: 443
-  #port_20000:
-  #  name: 'port_20000'
-  #  port: 20000
-  #  targetPort: 443
