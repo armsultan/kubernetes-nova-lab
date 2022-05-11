@@ -26,6 +26,12 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl \
     && chmod +x ./kubectl \
     && mv ./kubectl /usr/local/bin/kubectl \
+    # doctl for digital Ocean
+    && wget https://github.com/digitalocean/doctl/releases/download/v1.74.0/doctl-1.74.0-linux-amd64.tar.gz \
+    && tar xf ./doctl-1.74.0-linux-amd64.tar.gz \
+    && chmod +x ./doctl \
+    && mv ./doctl /usr/local/bin \
+    && rm ./doctl-1.74.0-linux-amd64.tar.gz \
     # Load aliases 
     && echo ". /workspaces/dev-container/.bash_aliases" >> /etc/bash.bashrc \
     # Load fzf shortcuts for bash 

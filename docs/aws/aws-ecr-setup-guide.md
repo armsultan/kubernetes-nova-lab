@@ -1,4 +1,6 @@
-### What is AWS ECR?
+# AWS ECR Setup guide
+
+## What is AWS ECR?
 
 The AWS Container Registry service is a managed container repository. ECR, like
 the popular Dockerhub, supports both public and private repositories. We may

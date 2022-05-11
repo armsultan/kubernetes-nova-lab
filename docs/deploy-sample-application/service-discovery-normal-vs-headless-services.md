@@ -169,7 +169,9 @@ services and load balance the pods directly.
 
 Now that the our services are "headless", you can use `kubectl exec` to do a
 `nslookup` or `dig` and queryfor the **sun** and **moon** service and check
-DNS is working correctly. First, lets scale both services to two pods each
+DNS is working correctly. 
+
+First, lets scale both services to two pods each
 so we know to expect exactly two SRV records, one for each pod in the service
 
 1.  Scale out the sun and moon deployments to multiple pods, we can edit the
@@ -236,7 +238,10 @@ so we know to expect exactly two SRV records, one for each pod in the service
 
       ```bash
       # Sun
-      kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.sun-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+      kubectl exec -i -t network-tools \
+         -- /bin/bash -c "for i in {1..10}; \
+            do curl -s http://_http._tcp.sun-svc.solar-system.svc.cluster.local:8080 | \
+            grep 'Server address'; done"
 
       Server address: 192.168.72.194:8080
       Server address: 192.168.72.194:8080
@@ -252,7 +257,10 @@ so we know to expect exactly two SRV records, one for each pod in the service
 
       ```bash
       # Moon
-      kubectl exec -i -t network-tools -- /bin/bash -c "for i in {1..10}; do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | grep 'Server address'; done"
+      kubectl exec -i -t network-tools \
+         -- /bin/bash -c "for i in {1..10}; \
+         do curl -s http://_http._tcp.moon-svc.solar-system.svc.cluster.local:8080 | \
+         grep 'Server address'; done"
 
       Server address: 192.168.70.95:8080
       Server address: 192.168.26.52:8080
