@@ -133,6 +133,7 @@ this region
 I will also use the tag `user=armand` to further identify my asset on our shared
 account
 
+#### Create a DOKS cluster
 
 1. Review the Machine size options of Kubernetes nodes to use.
 
@@ -207,6 +208,33 @@ account
    doks-armand-sfo2-default-pool-cw9vt   Ready    <none>   7m49s   v1.22.8
    ```
 
+#### Save DOKS cluster kubeconfig
+
+If you rebuild your dev container, or move to another client machine, your local
+`kubeconfig` settings may be erased. No worries, at any point you can (re)save
+the `kubeconfig` using the following command
+
+1. Use `doctl kubernetes cluster kubeconfig save` command to (re)save the
+   `kubeconfig`.
+
+      Find the DOKS ID
+      ```bash
+      doctl kubernetes cluster list
+      
+      ID                                      Name                Region    Version        Auto Upgrade    Status     Node Pools
+      cc1c935e-a14f-4485-9344-d54d107a1f33    doks-armand-sfo2    sfo2      1.22.8-do.1    false           running    doks-armand-sfo2-default-pool
+      ```
+
+      Now save the `kubeconfig` to your local machine◊
+
+      ```bash
+      doctl kubernetes cluster kubeconfig save  cc1c935e-a14f-4485-9344-d54d107a1f33 
+
+      Notice: Adding cluster credentials to kubeconfig file found in "/home/vscode/.kube/config"
+      Notice: Setting current-context to do-sfo2-doks-armand-sfo2
+      ```
+
 ---
 
-We have successfully deployed our kubernetes cluster - Go back to [Table of Contents](../../README.md)
+We have successfully deployed our kubernetes cluster - Go back to [Table of
+Contents](../../README.md)

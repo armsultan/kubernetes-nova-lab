@@ -55,6 +55,8 @@ any manifest file for GitOps versioning
 
 ### Scaling Nova using Helm
 
+*Scaling using `Helm upgrade` is not currently supported.*
+
 We can also scale the Nova deployment by using `helm`.  Helm charts make it easy
 to deploy, debug, and update applications in Kubernetes with their separate
 values and upgrade lifecycles. This method requires the `replicaCount` to be

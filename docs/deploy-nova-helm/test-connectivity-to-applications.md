@@ -79,8 +79,13 @@ From our a external client machine, *outside* the kubernetes cluster
    `loadBalancer` for the Nova (`nova-srv`) service.
 
     ```bash
-    # Get External loadBalancer address
+    # Get External loadBalancer FQDN 
     EXTERNALIP=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].hostname}')
+    #OR
+    # Get External loadBalancer IP address
+    EXTERNALIP=$(kubectl get services/nova-svc -n nova-ns -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
+    
+    # Print that out
     echo $EXTERNALIP
     # Optional: Get the IPv4 Address
     # NOVA_LB=$(dig +short $COFFEE_LB A |  awk 'NR==1')

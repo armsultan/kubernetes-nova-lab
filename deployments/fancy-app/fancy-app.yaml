@@ -4,7 +4,7 @@ metadata:
   name: sun
   namespace: solar-system
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: sun
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: sun
-        image: armsultan/test-page:plain-text-nonroot
+        image: armsultan/thesun-single-page-nonroot
         imagePullPolicy: Always
         # resources:
         #   limits:
@@ -33,7 +33,7 @@ metadata:
   name: moon
   namespace: solar-system
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: moon 
@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
       - name: moon 
-        image: armsultan/test-page:plain-text-nonroot
+        image: armsultan/themoon-single-page-nonroot
         imagePullPolicy: Always
         # resources:
         #   limits:

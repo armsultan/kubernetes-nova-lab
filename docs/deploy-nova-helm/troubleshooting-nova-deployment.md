@@ -89,6 +89,37 @@ ADC Worker pod is seen in the snippet below:
 If pods are `pending` due to `Insufficient memory` or `Insufficient CPU` we can
 set lower resource requirements:
 
+### Using `kubectl set resource` on-the-fly
+
+1. We can set the resource requests and limits of the Deployment using `kubectl`
+
+    ```bash
+    kubectl set resources deployment nova-dpl -n nova-ns \
+       --limits cpu=300m,memory=2Gi \
+       --requests cpu=50m,memory=200Mi
+    
+    deployment.apps/nova-dpl resource requirements updated
+    ```
+
+1. Check the deployment
+
+    ```bash
+    kubectl get pods,deployments,services -o wide -n nova-ns
+    NAME                            READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+    pod/nova-dpl-59c785889b-8wq9w   1/1     Running   0          38s   10.244.1.206   pool-gl450ovty-u4m3n   <none>           <none>
+
+    NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                       SELECTOR
+    deployment.apps/nova-dpl   1/1     1            1           44m   nova-nvc     novaadc/nova-client:latest   app=nova-nvc,deployment=nova-dpl
+
+    NAME               TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                                     AGE   SELECTOR
+    service/nova-svc   LoadBalancer   10.245.200.88   161.35.240.12   443:30306/TCP,80:30625/TCP,1080:30631/TCP   44m   app=nova-nvc,deployment=nova-dpl
+    ```
+
+### Make changes in a yaml manifest then apply
+
+Alternately you can record these changes in a yaml manifest and apply changes in
+`kubectl` also:
+
 1. Export the Nova deployment (`nova-dpl`)  manifest to a editable `yaml` file
 
     ```bash
@@ -118,13 +149,13 @@ set lower resource requirements:
                 memory: 200Mi
     ```
 
-3. Apply changes define in the manifest file using `kubectl apply`
+1. Apply changes define in the manifest file using `kubectl apply`
 
     ```bash
     kubectl apply -f nova-less-resources.yaml
     ```
 
-4. Check the deployment
+1. Check the deployment
 
     ```bash
     kubectl get pods,deployments,services -o wide -n nova-ns

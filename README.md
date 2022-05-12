@@ -3,7 +3,7 @@
 **WIP:** Collection of exercises to get acquainted with Kubernetes and exposing
 services realiably and securely using [Snapt Nova](https://www.snapt.net/platforms/nova-adc)
 
-## Lab Guide
+## Basic Setup
 
 1. Setup our client "jump host" using Development Containers in Visual Studio Code
    1. [Get started with development Containers in Visual Studio Code](docs/dev-container/Lab-setup-using-dev-container.md)
@@ -25,6 +25,9 @@ services realiably and securely using [Snapt Nova](https://www.snapt.net/platfor
 
 1. Scaling Nova Workers and ADC clusters in action
    1. [Scaling Nova Workers](docs/deploy-nova-helm/scaling-nova.md)
+
+## Demos 
+   1. [Deploy a Fancier Application](docs/deploy-sample-application/deploy-fancy-application.md)
 
 ## Troubleshooting Nova 
    1. [Troubleshooting](docs/deploy-nova-helm/troubleshooting-nova-deployment.md)
