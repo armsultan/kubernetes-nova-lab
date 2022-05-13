@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: sun
-        image: armsultan/thesun-single-page-nonroot
+        image: armsultan/solar-system:sun-nonroot
         imagePullPolicy: Always
         # resources:
         #   limits:
@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
       - name: moon 
-        image: armsultan/themoon-single-page-nonroot
+        image: armsultan/solar-system:moon-nonroot
         imagePullPolicy: Always
         # resources:
         #   limits:

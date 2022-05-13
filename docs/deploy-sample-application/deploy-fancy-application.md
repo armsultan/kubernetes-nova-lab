@@ -15,8 +15,8 @@
 
 1. We can update the our simple applications, **sun** and **moon** Deployments,
    currently using a text based application (`armsultan/test-page:text-nonroot`)
-   to a fancy application (`armsultan/thesun-single-page-nonroot` and
-   `armsultan/themoon-single-page-nonroot`) by updating the images in the deployment
+   to a fancy application (`armsultan/solar-system:sun-nonroot` and
+   `armsultan/solar-system:moon-nonroot`) by updating the images in the deployment
    using `kubectl`
    
    The `kubectl set image` command updates the container image of the
@@ -25,20 +25,20 @@
     ```bash
     # Update sun
     kubectl set image deployment sun -n solar-system \
-            armsultan/thesun-single-page-nonroot
+            armsultan/solar-system:sun-nonroot
 
     # Update moon
     kubectl set image deployment moon -n solar-system \
-            armsultan/themoon-single-page-nonroot
+            armsultan/solar-system:moon-nonroot
     ```
 ### On-the-fly update using `kubectl edit`
 
 1. *Alternatively*, you can edit the **sun** Deployment and change the
    `.spec.template.spec.containers[0].image` from
-   `armsultan/test-page:text-nonroot` to `armsultan/thesun-single-page-nonroot`,
+   `armsultan/test-page:text-nonroot` to `armsultan/solar-system:sun-nonroot`,
    and edit the **moon** Deployment and change the
    `.spec.template.spec.containers[0].image` from
-   `armsultan/test-page:text-nonroot` to `armsultan/themoon-single-page-nonroot`
+   `armsultan/test-page:text-nonroot` to `armsultan/solar-system:moon-nonroot`
 
     **Edit sun**
     ```bash
@@ -54,9 +54,9 @@
 
 1. *Alternatively*, you can edit the **sun** and **moon** Deployment manifest and change
    `.spec.template.spec.containers[0].image` from
-   `armsultan/test-page:text-nonroot` to `armsultan/thesun-single-page-nonroot` for **sun**,
+   `armsultan/test-page:text-nonroot` to `armsultan/solar-system:sun-nonroot` for **sun**,
    and change the `.spec.template.spec.containers[0].image` from
-   `armsultan/test-page:text-nonroot` to `armsultan/themoon-single-page-nonroot` for **moon**.
+   `armsultan/test-page:text-nonroot` to `armsultan/solar-system:moon-nonroot` for **moon**.
    You then can apply changes using `kubectl`. 
 
     The following will update the **sun** and **moon** deployments using the [provided
